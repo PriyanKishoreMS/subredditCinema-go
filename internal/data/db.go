@@ -3,12 +3,11 @@ package data
 import (
 	"context"
 	"fmt"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jackc/pgx/v5"
-	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/gommon/log"
+	"github.com/priyankishorems/bollytics-go/utils"
 )
 
 type PSQLDB struct {
@@ -21,11 +20,11 @@ type PSQLDB struct {
 
 func (m PSQLDB) Open() (*pgx.Conn, error) {
 	c := PSQLDB{
-		database: os.Getenv("DB_DATABASE"),
-		username: os.Getenv("DB_USERNAME"),
-		pwd:      os.Getenv("DB_PASSWORD"),
-		port:     os.Getenv("DB_PORT"),
-		host:     os.Getenv("DB_HOST"),
+		database: utils.DBName,
+		username: utils.DBUsername,
+		pwd:      utils.DBPassword,
+		port:     utils.DBPort,
+		host:     utils.DBHost,
 	}
 
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", c.username, c.pwd, c.host, c.port, c.database)

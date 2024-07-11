@@ -9,9 +9,10 @@ import (
 func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORS())
+	e.Use(IPRateLimit(h))
 
-	limiterStore := middleware.NewRateLimiterMemoryStore(20)
-	e.Use(middleware.RateLimiter(limiterStore))
+	// limiterStore := middleware.NewRateLimiterMemoryStore(20)
+	// e.Use(middleware.RateLimiter(limiterStore))
 
 	e.HideBanner = true
 	e.GET("/", h.HomeFunc)

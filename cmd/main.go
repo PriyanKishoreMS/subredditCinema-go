@@ -11,20 +11,20 @@ import (
 	"github.com/priyankishorems/bollytics-go/api"
 	"github.com/priyankishorems/bollytics-go/api/handlers"
 	"github.com/priyankishorems/bollytics-go/internal/data"
+	"github.com/priyankishorems/bollytics-go/utils"
 )
-
-type config struct {
-	port int
-	env  string
-}
 
 var validate validator.Validate
 
 func main() {
-	cfg := &config{}
+	cfg := &utils.Config{}
 
-	flag.IntVar(&cfg.port, "port", 3000, "Server port")
-	flag.StringVar(&cfg.env, "env", "development", "Server port")
+	flag.IntVar(&cfg.Port, "port", 3000, "Server port")
+	flag.StringVar(&cfg.Env, "env", "development", "Server port")
+
+	flag.IntVar(&cfg.RateLimiter.Rps, "limiter-rps", 10, "Rate limiter max requests per second")
+	flag.IntVar(&cfg.RateLimiter.Burst, "limiter-burst", 10, "Rate limiter max burst")
+	flag.BoolVar(&cfg.RateLimiter.Enabled, "limiter-enabled", true, "Rate limiter enabled")
 
 	flag.Parse()
 	log.SetHeader("${time_rfc3339} ${level}")
@@ -39,7 +39,10 @@ func main() {
 	validate = *validator.New()
 
 	h := &handlers.Handlers{
+		Config:   *cfg,
 		Validate: validate,
+		Utils:    utils.NewUtils(),
+		Data:     data.NewModel(db),
 	}
 
 	e := api.SetupRoutes(h)
@@ -47,5 +50,5 @@ func main() {
 	e.Server.WriteTimeout = time.Second * 20
 	e.Server.IdleTimeout = time.Minute
 	e.HideBanner = true
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.Port)))
 }
