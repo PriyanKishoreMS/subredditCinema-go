@@ -23,6 +23,7 @@ import (
 type Utilities interface {
 	ConvertToInt64(str string) (int64, error)
 	ReadIntParam(c echo.Context, str string) (int64, error)
+	ReadStringParam(c echo.Context, str string) (string, error)
 	ReadJSON(c echo.Context, dst interface{}) error
 	ReadFormData(c echo.Context, dst interface{}) error
 	ReadStringQuery(qs url.Values, key string, defaultValue string) string
@@ -66,6 +67,14 @@ func (u *utilsImpl) ReadIntParam(c echo.Context, str string) (int64, error) {
 	}
 
 	return id, err
+}
+
+func (u *utilsImpl) ReadStringParam(c echo.Context, str string) (string, error) {
+	param := c.Param(str)
+	if param == "" {
+		return "", errors.New("invalid parameter")
+	}
+	return param, nil
 }
 
 func (u *utilsImpl) ReadJSON(c echo.Context, dst interface{}) error {

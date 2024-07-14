@@ -16,5 +16,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 	e.HideBanner = true
 	e.GET("/", h.HomeFunc)
+	e.GET("/actors/:name", h.SearchActorsHandler)
+	e.GET("/movies/:name", h.SearchMoviesHandler)
 	return e
 }

@@ -12,6 +12,7 @@ var (
 	DBPassword string = os.Getenv("DB_PASSWORD")
 	DBPort     string = os.Getenv("DB_PORT")
 	DBHost     string = os.Getenv("DB_HOST")
+	TMDBKey    string = os.Getenv("TMDB_API_KEY")
 )
 
 type Config struct {

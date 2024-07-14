@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/api"
@@ -38,11 +39,20 @@ func main() {
 
 	validate = *validator.New()
 
+	tmdbClient, err := tmdb.Init(utils.TMDBKey)
+	if err != nil {
+		log.Fatalf("error in initializing tmdb client; %v", err)
+	}
+
+	log.Print("TMDB BASE URL: ", tmdbClient.GetBaseURL())
+	log.Print("TMDB API KEY: ", utils.TMDBKey)
+
 	h := &handlers.Handlers{
 		Config:   *cfg,
 		Validate: validate,
 		Utils:    utils.NewUtils(),
 		Data:     data.NewModel(db),
+		Tmdb:     tmdbClient,
 	}
 
 	e := api.SetupRoutes(h)
