@@ -27,28 +27,37 @@ func (h *Handlers) SearchActorsHandler(c echo.Context) error {
 
 	page := h.Utils.ReadStringQuery(c.QueryParams(), "page", "1")
 	pageInt, _ := strconv.Atoi(page)
-
 	if pageInt < 1 {
 		return c.JSON(http.StatusBadRequest, Cake{
 			"message": "Invalid page number",
 			"status":  "error",
 		})
-
 	}
 
 	options := map[string]string{
 		"append_to_response": "images",
 		"page":               page,
 	}
-
 	width := 300
 
 	actors, err := h.Tmdb.GetSearchPeople(name, options)
 	if err != nil {
-		log.Error(fmt.Sprintf("Error fetching movie details: %v", err))
+		log.Error(fmt.Sprintf("Error fetching actor details: %v", err))
+		return c.JSON(http.StatusInternalServerError, Cake{
+			"message": "Error fetching actor details",
+			"status":  "error",
+		})
 	}
 
 	res := []response{}
+
+	if actors == nil || actors.Results == nil {
+		return c.JSON(http.StatusNotFound, Cake{
+			"message": "No people found",
+			"status":  "error",
+		},
+		)
+	}
 
 	for _, v := range actors.Results {
 		if v.ProfilePath != "" {
@@ -94,10 +103,21 @@ func (h *Handlers) SearchMoviesHandler(c echo.Context) error {
 	movies, err := h.Tmdb.GetSearchMovies(name, options)
 	if err != nil {
 		log.Error(fmt.Sprintf("Error fetching movie details: %v", err))
+		return c.JSON(http.StatusInternalServerError, Cake{
+			"message": "Error fetching movie details",
+			"status":  "error",
+		})
 	}
 
 	res := []response{}
 
+	if movies == nil || movies.Results == nil {
+		return c.JSON(http.StatusNotFound, Cake{
+			"message": "No movies found",
+			"status":  "error",
+		},
+		)
+	}
 	for _, v := range movies.Results {
 		if v.PosterPath != "" {
 			res = append(res, response{

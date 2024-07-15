@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jackc/pgx/v5"
+	pgx "github.com/jackc/pgx/v5"
 	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/utils"
 )
@@ -40,7 +39,7 @@ func (m PSQLDB) Open() (*pgx.Conn, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("Connected to database: %s\n", dbName)
+	log.Infof("Connected to database: %s", dbName)
 
 	return conn, nil
 }

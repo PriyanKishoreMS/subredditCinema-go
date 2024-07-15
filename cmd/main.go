@@ -13,6 +13,8 @@ import (
 	"github.com/priyankishorems/bollytics-go/api/handlers"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/priyankishorems/bollytics-go/utils"
+	graw "github.com/turnage/graw/reddit"
+	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
 var validate validator.Validate
@@ -43,16 +45,34 @@ func main() {
 	if err != nil {
 		log.Fatalf("error in initializing tmdb client; %v", err)
 	}
+	log.Info("TMDB client initialized")
 
-	log.Print("TMDB BASE URL: ", tmdbClient.GetBaseURL())
-	log.Print("TMDB API KEY: ", utils.TMDBKey)
+	redditBot, err := graw.NewBotFromAgentFile("graw.ini", 0)
+	if err != nil {
+		log.Fatalf("error in initializing reddit bot; %v", err)
+	}
+
+	redditCredentials := reddit.Credentials{
+		ID:       utils.RedditId,
+		Secret:   utils.RedditSecret,
+		Username: utils.RedditUsername,
+		Password: utils.RedditPassword,
+	}
+
+	redditClient, err := reddit.NewClient(redditCredentials)
+	if err != nil {
+		log.Fatalf("error in initializing go-reddit client; %v", err)
+	}
 
 	h := &handlers.Handlers{
-		Config:   *cfg,
-		Validate: validate,
-		Utils:    utils.NewUtils(),
-		Data:     data.NewModel(db),
-		Tmdb:     tmdbClient,
+		Config:    *cfg,
+		Validate:  validate,
+		Utils:     utils.NewUtils(),
+		Data:      data.NewModel(db),
+		Tmdb:      tmdbClient,
+		RedditBot: redditBot,
+		Reddit:    redditClient,
+		Log:       log.New(""),
 	}
 
 	e := api.SetupRoutes(h)
