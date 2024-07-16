@@ -32,8 +32,6 @@ func (m PSQLDB) Open() (*pgx.Conn, error) {
 		return nil, err
 	}
 
-	defer conn.Close(context.Background())
-
 	var dbName string
 	err = conn.QueryRow(context.Background(), "SELECT current_database()").Scan(&dbName)
 	if err != nil {

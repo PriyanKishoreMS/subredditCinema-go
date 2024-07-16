@@ -52,6 +52,8 @@ func main() {
 		log.Fatalf("error in initializing reddit bot; %v", err)
 	}
 
+	log.Info("Graw Bot initialized")
+
 	redditCredentials := reddit.Credentials{
 		ID:       utils.RedditId,
 		Secret:   utils.RedditSecret,
@@ -63,6 +65,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("error in initializing go-reddit client; %v", err)
 	}
+
+	log.Info("Reddit client initialized")
 
 	h := &handlers.Handlers{
 		Config:    *cfg,

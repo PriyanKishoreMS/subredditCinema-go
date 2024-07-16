@@ -9,13 +9,14 @@ import (
 	"time"
 )
 
-// Post represents the structure of a single post
 type Post struct {
 	ID                   string    `json:"id"`
 	Name                 string    `json:"name"`
 	CreatedUTC           time.Time `json:"created_utc"`
 	Permalink            string    `json:"permalink"`
 	Title                string    `json:"title"`
+	Category             string    `json:"category"`
+	Selftext             string    `json:"selftext"`
 	Score                int       `json:"score"`
 	UpvoteRatio          float64   `json:"upvote_ratio"`
 	NumComments          int       `json:"num_comments"`
@@ -23,16 +24,15 @@ type Post struct {
 	SubredditID          string    `json:"subreddit_id"`
 	SubredditSubscribers int       `json:"subreddit_subscribers"`
 	Author               string    `json:"author"`
-	Over18               bool      `json:"over_18"`
+	AuthorFullname       string    `json:"author_fullname"`
 }
 
-// Wrapper struct to match the JSON structure
 type PostsWrapper struct {
 	Posts []Post `json:"posts"`
 }
 
 func main() {
-	jsonFile, err := os.Open("sortedTopKollywood.json")
+	jsonFile, err := os.Open("topMollywood.json")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -52,7 +52,8 @@ func main() {
 		return
 	}
 
-	// SortPosts(postsWrapper)
+	AddCategory(&postsWrapper, "top")
+	SortPosts(postsWrapper)
 
 	count := 1
 	date := postsWrapper.Posts[0].CreatedUTC
@@ -60,20 +61,32 @@ func main() {
 		createdDate := post.CreatedUTC.Day()
 		dateDate := date.Day()
 		if createdDate != dateDate {
-			date = post.CreatedUTC
 			fmt.Printf("%s. %d\n", post.CreatedUTC, count)
+			date = post.CreatedUTC
 			count = 1
 		}
 		count++
 	}
 }
 
+func AddCategory(postsWrapper *PostsWrapper, category string) {
+	for i := range postsWrapper.Posts {
+		postsWrapper.Posts[i].Category = category
+	}
+}
+
 func SortPosts(postsWrapper PostsWrapper) {
 	sort.Slice(postsWrapper.Posts, func(i, j int) bool {
-		return postsWrapper.Posts[j].CreatedUTC.Before(postsWrapper.Posts[i].CreatedUTC)
+		dateI := postsWrapper.Posts[i].CreatedUTC.Truncate(24 * time.Hour)
+		dateJ := postsWrapper.Posts[j].CreatedUTC.Truncate(24 * time.Hour)
+
+		if dateI.Equal(dateJ) {
+			return postsWrapper.Posts[i].Score > postsWrapper.Posts[j].Score
+		}
+		return dateI.After(dateJ)
 	})
 
-	sortedFile, err := os.Create("sortedTopKollywood.json")
+	sortedFile, err := os.Create("sortedTopMollywood.json")
 	if err != nil {
 		fmt.Println(err)
 		return

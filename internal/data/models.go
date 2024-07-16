@@ -13,11 +13,11 @@ func Handlectx() (context.Context, context.CancelFunc) {
 }
 
 type Models struct {
-	Tasks TaskModel
+	Posts PostModel
 }
 
 func NewModel(db *pgx.Conn) Models {
 	return Models{
-		Tasks: TaskModel{DB: db},
+		Posts: PostModel{DB: db},
 	}
 }
