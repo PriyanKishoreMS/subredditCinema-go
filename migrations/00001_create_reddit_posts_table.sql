@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS reddit_posts (
     id VARCHAR(32) PRIMARY KEY,
+    post_id BIGSERIAL UNIQUE NOT NULL,
     name VARCHAR(32) UNIQUE NOT NULL,
     created_utc TIMESTAMP NOT NULL,
     permalink VARCHAR(255) NOT NULL,
@@ -16,9 +17,11 @@ CREATE TABLE IF NOT EXISTS reddit_posts (
     subreddit_id VARCHAR(32) NOT NULL,
     subreddit_subscribers BIGINT NOT NULL,
     author VARCHAR(64) NOT NULL,
-    author_fullname VARCHAR(32) NOT NULL
+    author_fullname VARCHAR(32) NOT NULL,
+    created_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_reddit_posts_post_id ON reddit_posts(post_id);
 CREATE INDEX IF NOT EXISTS idx_reddit_posts_title ON reddit_posts(title);
 CREATE INDEX IF NOT EXISTS idx_reddit_posts_subreddit ON reddit_posts(subreddit);
 CREATE INDEX IF NOT EXISTS idx_reddit_posts_category ON reddit_posts(category);

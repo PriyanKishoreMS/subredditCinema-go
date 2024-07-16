@@ -6,7 +6,6 @@ import (
 	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/priyankishorems/bollytics-go/utils"
 	graw "github.com/turnage/graw/reddit"
@@ -22,7 +21,6 @@ type Handlers struct {
 	Tmdb      *tmdb.Client
 	RedditBot graw.Bot
 	Reddit    *reddit.Client
-	Log       *log.Logger
 }
 
 func (h *Handlers) HomeFunc(c echo.Context) error {

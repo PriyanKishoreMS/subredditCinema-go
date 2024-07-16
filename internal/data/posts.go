@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	pgx "github.com/jackc/pgx/v5"
@@ -36,12 +37,13 @@ type PostsWrapper struct {
 	Posts []Post `json:"posts"`
 }
 
-func (t PostModel) CreateTask() error {
+func (p PostModel) CreateTask() error {
 	return nil
 }
 
-func (t PostModel) DumpJson(filename string) error {
-	jsonFile, err := os.Open(filename)
+func (p PostModel) DumpJson(filename string) error {
+	fullpath := filepath.Join("dump/", filename)
+	jsonFile, err := os.Open(fullpath)
 	if err != nil {
 		return fmt.Errorf("error in opening json file; %v", err)
 	}
@@ -61,13 +63,16 @@ func (t PostModel) DumpJson(filename string) error {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
-	tx, err := t.DB.Begin(ctx)
+	tx, err := p.DB.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("error in starting transaction; %v", err)
 	}
 
 	defer func() {
-		if err != nil {
+		if r := recover(); r != nil {
+			tx.Rollback(ctx)
+			err = fmt.Errorf("transaction panicked: %v", r)
+		} else if err != nil {
 			tx.Rollback(ctx)
 		} else {
 			err = tx.Commit(ctx)
@@ -87,6 +92,51 @@ func (t PostModel) DumpJson(filename string) error {
 		if err != nil {
 			return fmt.Errorf("error in inserting post: %v", err)
 		}
+	}
+
+	return nil
+}
+
+func (p PostModel) InsertDailyPosts(dailyPosts []Post) error {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	tx, err := p.DB.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error in starting transaction; %v", err)
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback(ctx)
+			err = fmt.Errorf("transaction panicked: %v", r)
+		} else if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			err = tx.Commit(ctx)
+		}
+	}()
+
+	InsertPostsQuery := `INSERT INTO reddit_posts
+	(id, name, created_utc, permalink, title, category, selftext, score, upvote_ratio, num_comments, subreddit, subreddit_id, subreddit_subscribers, author, author_fullname)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+	ON CONFLICT(id) DO UPDATE
+		SET top_and_controversial=TRUE
+	WHERE reddit_posts.category <> EXCLUDED.category
+	`
+
+	for _, post := range dailyPosts {
+		_, err := tx.Exec(ctx, InsertPostsQuery, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
+		if err != nil {
+			return fmt.Errorf("error in inserting post: %v", err)
+		}
+	}
+
+	DeleteOldPostsQuery := `DELETE FROM reddit_posts WHERE created_utc < NOW() - INTERVAL '30 days'`
+
+	_, err = tx.Exec(ctx, DeleteOldPostsQuery)
+	if err != nil {
+		return fmt.Errorf("error in deleting old posts: %v", err)
 	}
 
 	return nil

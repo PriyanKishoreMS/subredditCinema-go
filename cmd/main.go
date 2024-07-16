@@ -76,7 +76,6 @@ func main() {
 		Tmdb:      tmdbClient,
 		RedditBot: redditBot,
 		Reddit:    redditClient,
-		Log:       log.New(""),
 	}
 
 	e := api.SetupRoutes(h)

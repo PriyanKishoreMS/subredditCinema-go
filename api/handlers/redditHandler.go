@@ -3,39 +3,112 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
-func (h *Handlers) RedditHomeHandler(c echo.Context) error {
-	err := GetFromReddit(h, c)
-	// err := DumpPosts(h, c)
-	return err
+var subReddits []string = []string{
+	"kollywood", "MalayalamMovies", "tollywood", "bollywood",
 }
 
-func GetFromReddit(h *Handlers, c echo.Context) error {
+func (h *Handlers) UpdatePostsFromReddit() error {
+	topPosts, err := GetDailyTopPosts(h)
+	if err != nil {
+		return err
 
-	posts, _, err := h.Reddit.Subreddit.TopPosts(context.Background(), "MalayalamMovies", &reddit.ListPostOptions{
-		ListOptions: reddit.ListOptions{
-			Limit: 100,
-			// After: "t3_1dqg62m",
-		},
-		Time: "month",
-	})
+	}
+
+	controversialPosts, err := GetDailyControversialPosts(h)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, posts)
-}
 
-func DumpPosts(h *Handlers, c echo.Context) error {
-	err := h.Data.Posts.DumpJson("sortedControversialMollywood.json")
+	allPosts := append(topPosts, controversialPosts...)
+
+	err = h.Data.Posts.InsertDailyPosts(allPosts)
 	if err != nil {
-		fmt.Printf("error in dumping json; %v", err)
-		return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
+		return err
 	}
 
-	return c.JSON(http.StatusOK, Cake{"message": "Dumped json"})
+	fmt.Println("Posts updated successfully")
+	return nil
+}
+
+func GetDailyTopPosts(h *Handlers) ([]data.Post, error) {
+	var allPosts []data.Post
+
+	for _, sub := range subReddits {
+		posts, _, err := h.Reddit.Subreddit.TopPosts(context.Background(), sub, &reddit.ListPostOptions{
+			ListOptions: reddit.ListOptions{
+				Limit: 10,
+			},
+			Time: "day",
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, post := range posts {
+			allPosts = append(allPosts, data.Post{
+				ID:                   post.ID,
+				Name:                 post.FullID,
+				CreatedUTC:           post.Created.Time,
+				Permalink:            post.Permalink,
+				Title:                post.Title,
+				Category:             "top",
+				Selftext:             post.Body,
+				Score:                post.Score,
+				UpvoteRatio:          float64(post.UpvoteRatio),
+				NumComments:          post.NumberOfComments,
+				Subreddit:            post.SubredditName,
+				SubredditID:          post.SubredditID,
+				SubredditSubscribers: post.SubredditSubscribers,
+				Author:               post.Author,
+				AuthorFullname:       post.AuthorID,
+			})
+
+		}
+	}
+
+	return allPosts, nil
+}
+
+func GetDailyControversialPosts(h *Handlers) ([]data.Post, error) {
+	var allPosts []data.Post
+
+	for _, sub := range subReddits {
+		posts, _, err := h.Reddit.Subreddit.ControversialPosts(context.Background(), sub, &reddit.ListPostOptions{
+			ListOptions: reddit.ListOptions{
+				Limit: 10,
+			},
+			Time: "day",
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, post := range posts {
+			allPosts = append(allPosts, data.Post{
+				ID:                   post.ID,
+				Name:                 post.FullID,
+				CreatedUTC:           post.Created.Time,
+				Permalink:            post.Permalink,
+				Title:                post.Title,
+				Category:             "controversial",
+				Selftext:             post.Body,
+				Score:                post.Score,
+				UpvoteRatio:          float64(post.UpvoteRatio),
+				NumComments:          post.NumberOfComments,
+				Subreddit:            post.SubredditName,
+				SubredditID:          post.SubredditID,
+				SubredditSubscribers: post.SubredditSubscribers,
+				Author:               post.Author,
+				AuthorFullname:       post.AuthorID,
+			})
+
+		}
+	}
+
+	return allPosts, nil
 }
