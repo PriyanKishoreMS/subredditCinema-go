@@ -3,7 +3,10 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"slices"
 
+	"github.com/labstack/echo/v4"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -12,11 +15,70 @@ var subReddits []string = []string{
 	"kollywood", "MalayalamMovies", "tollywood", "bollywood",
 }
 
+const (
+	intervalWeek          = "week"
+	intervalMonth         = "month"
+	categoryTop           = "top"
+	categoryControversial = "controversial"
+)
+
+func (h *Handlers) GetTopUsers(c echo.Context) error {
+
+	sub, err := h.Utils.ReadStringParam(c, "sub")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid sub %v", err)
+	}
+
+	if slices.Index(subReddits, sub) == -1 {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid sub"))
+		return fmt.Errorf("invalid sub")
+	}
+
+	interval, err := h.Utils.ReadStringParam(c, "interval")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid interval %v", err)
+	}
+
+	if interval != intervalWeek && interval != intervalMonth {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
+		return fmt.Errorf("invalid interval")
+	}
+
+	category, err := h.Utils.ReadStringParam(c, "category")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid category %v", err)
+
+	}
+
+	if category != categoryTop && category != categoryControversial {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid category"))
+		return fmt.Errorf("invalid category")
+	}
+
+	var intervalInt int
+
+	if interval == intervalWeek {
+		intervalInt = 7
+	} else {
+		intervalInt = 30
+	}
+
+	topUsers, err := h.Data.Posts.GetTopUser(sub, category, intervalInt)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error getting top users %v", err)
+	}
+
+	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_%s_users", sub, category, interval): topUsers})
+}
+
 func (h *Handlers) UpdatePostsFromReddit() error {
 	topPosts, err := GetDailyTopPosts(h)
 	if err != nil {
 		return err
-
 	}
 
 	controversialPosts, err := GetDailyControversialPosts(h)

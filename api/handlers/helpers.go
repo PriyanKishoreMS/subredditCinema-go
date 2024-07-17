@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -34,14 +33,4 @@ func GetFromReddit(h *Handlers, c echo.Context) error {
 		return err
 	}
 	return c.JSON(200, posts)
-}
-
-func DumpPosts(h *Handlers, c echo.Context, filename string) error {
-	err := h.Data.Posts.DumpJson(filename)
-	if err != nil {
-		fmt.Printf("error in dumping json; %v", err)
-		return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
-	}
-
-	return c.JSON(http.StatusOK, Cake{"message": "Dumped json"})
 }

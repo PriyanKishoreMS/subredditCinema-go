@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	pgx "github.com/jackc/pgx/v5"
+	pgx "github.com/jackc/pgx/v5/pgxpool"
 )
 
 func Handlectx() (context.Context, context.CancelFunc) {
@@ -16,7 +16,7 @@ type Models struct {
 	Posts PostModel
 }
 
-func NewModel(db *pgx.Conn) Models {
+func NewModel(db *pgx.Pool) Models {
 	return Models{
 		Posts: PostModel{DB: db},
 	}

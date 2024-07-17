@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"time"
@@ -32,12 +31,12 @@ func main() {
 	flag.Parse()
 	log.SetHeader("${time_rfc3339} ${level}")
 
-	conn := data.PSQLDB{}
-	db, err := conn.Open()
+	db := data.PSQLDB{}
+	dbPool, err := db.Open()
 	if err != nil {
 		log.Fatalf("error in opening db; %v", err)
 	}
-	defer db.Close(context.Background())
+	defer dbPool.Close()
 
 	validate = *validator.New()
 
@@ -72,7 +71,7 @@ func main() {
 		Config:    *cfg,
 		Validate:  validate,
 		Utils:     utils.NewUtils(),
-		Data:      data.NewModel(db),
+		Data:      data.NewModel(dbPool),
 		Tmdb:      tmdbClient,
 		RedditBot: redditBot,
 		Reddit:    redditClient,

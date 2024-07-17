@@ -25,11 +25,10 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		api.GET("/actors/:name", h.SearchActorsHandler)
 		api.GET("/movies/:name", h.SearchMoviesHandler)
 
-		// reddit := api.Group("/reddit")
-		// {
-		// 	reddit.GET("/dump", h.InsertFromJson)
-		// 	reddit.GET("/update", h.UpdatePostsFromReddit)
-		// }
+		reddit := api.Group("/reddit")
+		{
+			reddit.GET("/:sub/:category/users/:interval", h.GetTopUsers)
+		}
 
 		scheduler, err := gocron.NewScheduler()
 		if err != nil {
@@ -39,9 +38,11 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		atTimes := gocron.NewAtTimes(atTime)
 
 		updateRedditPostsJob, err := scheduler.NewJob(gocron.DailyJob(1, atTimes), gocron.NewTask(func() {
+			log.Info("Running updateRedditPostsJob")
 			if err := h.UpdatePostsFromReddit(); err != nil {
 				log.Error("Error updating posts from Reddit: ", err)
 			}
+			log.Info("updateRedditPostsJob completed")
 		}))
 
 		if err != nil {

@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"time"
 
-	pgx "github.com/jackc/pgx/v5"
+	pgx "github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PostModel struct {
-	DB *pgx.Conn
+	DB *pgx.Pool
 }
 
 type Post struct {
@@ -36,9 +36,37 @@ type Post struct {
 type PostsWrapper struct {
 	Posts []Post `json:"posts"`
 }
+type TopUsers struct {
+	User         string `json:"user"`
+	TopPostCount int    `json:"post_count"`
+}
 
-func (p PostModel) CreateTask() error {
-	return nil
+func (p PostModel) GetTopUser(sub string, category string, interval int) ([]TopUsers, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+	var query string
+
+	if category == "top" {
+		query = `select author as user, count(*) as author_count from reddit_posts where subreddit=$1 and (category='top' or (category='controversial' and top_and_controversial=true)) and created_utc > now() - make_interval(days := $2) group by author order by author_count desc limit 5`
+	} else if category == "controversial" {
+		query = `select author as user, count(*) as author_count from reddit_posts where subreddit=$1 and (category='controversial' or (category='top' and top_and_controversial=true)) and created_utc > now() - make_interval(days := $2) group by author order by author_count desc limit 5`
+	}
+
+	rows, err := p.DB.Query(ctx, query, sub, interval)
+	if err != nil {
+		return nil, fmt.Errorf("error in getting top users; %v", err)
+	}
+
+	var topUsers []TopUsers
+	for rows.Next() {
+		var topUser TopUsers
+		err = rows.Scan(&topUser.User, &topUser.TopPostCount)
+		if err != nil {
+			return nil, fmt.Errorf("error in scanning top users; %v", err)
+		}
+		topUsers = append(topUsers, topUser)
+	}
+	return topUsers, nil
 }
 
 func (p PostModel) DumpJson(filename string) error {
@@ -134,10 +162,12 @@ func (p PostModel) InsertDailyPosts(dailyPosts []Post) error {
 
 	DeleteOldPostsQuery := `DELETE FROM reddit_posts WHERE created_utc < NOW() - INTERVAL '30 days'`
 
-	_, err = tx.Exec(ctx, DeleteOldPostsQuery)
+	deleted, err := tx.Exec(ctx, DeleteOldPostsQuery)
 	if err != nil {
 		return fmt.Errorf("error in deleting old posts: %v", err)
 	}
+
+	fmt.Println("Deleted old posts: ", deleted.RowsAffected())
 
 	return nil
 }
