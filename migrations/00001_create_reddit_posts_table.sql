@@ -20,14 +20,11 @@ CREATE TABLE IF NOT EXISTS reddit_posts (
     author_fullname VARCHAR(32) NOT NULL,
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS idx_reddit_posts_post_id ON reddit_posts(post_id);
 CREATE INDEX IF NOT EXISTS idx_reddit_posts_title ON reddit_posts(title);
 CREATE INDEX IF NOT EXISTS idx_reddit_posts_subreddit ON reddit_posts(subreddit);
 CREATE INDEX IF NOT EXISTS idx_reddit_posts_category ON reddit_posts(category);
-CREATE INDEX IF NOT EXISTS idx_reddit_posts_created_utc ON reddit_posts(created_utc)
--- +goose StatementEnd
-
+CREATE INDEX IF NOT EXISTS idx_reddit_posts_created_utc ON reddit_posts(created_utc) -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS reddit_posts;

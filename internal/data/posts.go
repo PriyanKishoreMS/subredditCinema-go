@@ -37,8 +37,57 @@ type PostsWrapper struct {
 	Posts []Post `json:"posts"`
 }
 type TopUsers struct {
-	User         string `json:"user"`
-	TopPostCount int    `json:"post_count"`
+	User      string `json:"user"`
+	PostCount int    `json:"post_count"`
+}
+
+type TopPosts struct {
+	ID            string  `json:"id"`
+	Title         string  `json:"title"`
+	Body          string  `json:"body"`
+	Author        string  `json:"author"`
+	URL           string  `json:"url"`
+	Upvotes       int     `json:"upvotes"`
+	UpvoteRatio   float64 `json:"upvote_ratio"`
+	Subreddit     string  `json:"subreddit"`
+	NumComments   int     `json:"num_comments"`
+	Category      string  `json:"category"`
+	CategoryScore float64 `json:"category_score"`
+}
+
+func (p PostModel) GetTopPosts(sub string, category string, interval int) ([]TopPosts, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	var query string
+
+	switch category {
+	case "top":
+		query = TopPostsQuery
+	case "controversial":
+		query = ControversialPostsQuery
+	case "top_and_controversial":
+		query = TopAndControversialPostsQuery
+	default:
+		return nil, fmt.Errorf("invalid category: %s", category)
+	}
+
+	rows, err := p.DB.Query(ctx, query, sub, interval)
+	if err != nil {
+		return nil, fmt.Errorf("error in getting top posts; %v", err)
+	}
+
+	var topPosts []TopPosts
+	for rows.Next() {
+		var topPost TopPosts
+		err = rows.Scan(&topPost.ID, &topPost.Title, &topPost.Body, &topPost.Author, &topPost.URL, &topPost.Upvotes, &topPost.UpvoteRatio, &topPost.Subreddit, &topPost.NumComments, &topPost.Category, &topPost.CategoryScore)
+		if err != nil {
+			return nil, fmt.Errorf("error in scanning top posts; %v", err)
+		}
+		topPosts = append(topPosts, topPost)
+	}
+
+	return topPosts, nil
 }
 
 func (p PostModel) GetTopUser(sub string, category string, interval int) ([]TopUsers, error) {
@@ -46,10 +95,13 @@ func (p PostModel) GetTopUser(sub string, category string, interval int) ([]TopU
 	defer cancel()
 	var query string
 
-	if category == "top" {
-		query = `select author as user, count(*) as author_count from reddit_posts where subreddit=$1 and (category='top' or (category='controversial' and top_and_controversial=true)) and created_utc > now() - make_interval(days := $2) group by author order by author_count desc limit 5`
-	} else if category == "controversial" {
-		query = `select author as user, count(*) as author_count from reddit_posts where subreddit=$1 and (category='controversial' or (category='top' and top_and_controversial=true)) and created_utc > now() - make_interval(days := $2) group by author order by author_count desc limit 5`
+	switch category {
+	case "top":
+		query = TopUsersQuery
+	case "controversial":
+		query = ControversialUsersQuery
+	default:
+		return nil, fmt.Errorf("invalid category: %s", category)
 	}
 
 	rows, err := p.DB.Query(ctx, query, sub, interval)
@@ -60,12 +112,13 @@ func (p PostModel) GetTopUser(sub string, category string, interval int) ([]TopU
 	var topUsers []TopUsers
 	for rows.Next() {
 		var topUser TopUsers
-		err = rows.Scan(&topUser.User, &topUser.TopPostCount)
+		err = rows.Scan(&topUser.User, &topUser.PostCount)
 		if err != nil {
 			return nil, fmt.Errorf("error in scanning top users; %v", err)
 		}
 		topUsers = append(topUsers, topUser)
 	}
+
 	return topUsers, nil
 }
 
@@ -107,13 +160,7 @@ func (p PostModel) DumpJson(filename string) error {
 		}
 	}()
 
-	query := `INSERT INTO reddit_posts 
-	(id, name, created_utc, permalink, title, category, selftext, score, upvote_ratio, num_comments, subreddit, subreddit_id, subreddit_subscribers, author, author_fullname) 
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-	ON CONFLICT(id) DO UPDATE 
-		SET top_and_controversial=TRUE	
-	WHERE reddit_posts.category <> EXCLUDED.category
-	`
+	query := InsertPostsQuery
 
 	for _, post := range postsWrapper.Posts {
 		_, err := tx.Exec(ctx, query, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
@@ -145,24 +192,18 @@ func (p PostModel) InsertDailyPosts(dailyPosts []Post) error {
 		}
 	}()
 
-	InsertPostsQuery := `INSERT INTO reddit_posts
-	(id, name, created_utc, permalink, title, category, selftext, score, upvote_ratio, num_comments, subreddit, subreddit_id, subreddit_subscribers, author, author_fullname)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-	ON CONFLICT(id) DO UPDATE
-		SET top_and_controversial=TRUE
-	WHERE reddit_posts.category <> EXCLUDED.category
-	`
+	query := InsertPostsQuery
 
 	for _, post := range dailyPosts {
-		_, err := tx.Exec(ctx, InsertPostsQuery, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
+		_, err := tx.Exec(ctx, query, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
 		if err != nil {
 			return fmt.Errorf("error in inserting post: %v", err)
 		}
 	}
 
-	DeleteOldPostsQuery := `DELETE FROM reddit_posts WHERE created_utc < NOW() - INTERVAL '30 days'`
+	query = DeleteOldPostsQuery
 
-	deleted, err := tx.Exec(ctx, DeleteOldPostsQuery)
+	deleted, err := tx.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("error in deleting old posts: %v", err)
 	}

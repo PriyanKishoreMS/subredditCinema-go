@@ -27,7 +27,8 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		reddit := api.Group("/reddit")
 		{
-			reddit.GET("/:sub/:category/users/:interval", h.GetTopUsers)
+			reddit.GET("/:sub/:category/users/:interval", h.GetTopUsersHandler)
+			reddit.GET("/:sub/:category/posts/:interval", h.GetTopPostsHandler)
 		}
 
 		scheduler, err := gocron.NewScheduler()

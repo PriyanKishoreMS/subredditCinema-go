@@ -16,13 +16,72 @@ var subReddits []string = []string{
 }
 
 const (
-	intervalWeek          = "week"
-	intervalMonth         = "month"
-	categoryTop           = "top"
-	categoryControversial = "controversial"
+	intervalWeek                = "week"
+	intervalMonth               = "month"
+	categoryTop                 = "top"
+	categoryControversial       = "controversial"
+	categoryTopAndControversial = "top_and_controversial"
 )
 
-func (h *Handlers) GetTopUsers(c echo.Context) error {
+func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
+
+	sub, err := h.Utils.ReadStringParam(c, "sub")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid sub %v", err)
+	}
+
+	if slices.Index(subReddits, sub) == -1 {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid sub"))
+		return fmt.Errorf("invalid sub")
+	}
+
+	interval, err := h.Utils.ReadStringParam(c, "interval")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid interval %v", err)
+	}
+
+	if interval != intervalWeek && interval != intervalMonth {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
+		return fmt.Errorf("invalid interval")
+	}
+
+	category, err := h.Utils.ReadStringParam(c, "category")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid category %v", err)
+
+	}
+
+	if category != categoryTop && category != categoryControversial && category != categoryTopAndControversial {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid category"))
+		return fmt.Errorf("invalid category")
+	}
+
+	var intervalInt int
+
+	if interval == intervalWeek {
+		intervalInt = 7
+	} else {
+		intervalInt = 30
+	}
+
+	topPosts, err := h.Data.Posts.GetTopPosts(sub, category, intervalInt)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error getting top users %v", err)
+	}
+
+	responseLength := len(topPosts)
+	if responseLength < 1 {
+		return c.JSON(http.StatusNotFound, Cake{"message": "No posts found"})
+	}
+
+	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_%s_posts", sub, category, interval): topPosts})
+}
+
+func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
 
 	sub, err := h.Utils.ReadStringParam(c, "sub")
 	if err != nil {
@@ -70,6 +129,11 @@ func (h *Handlers) GetTopUsers(c echo.Context) error {
 	if err != nil {
 		h.Utils.InternalServerError(c, err)
 		return fmt.Errorf("error getting top users %v", err)
+	}
+
+	responseLength := len(topUsers)
+	if responseLength < 1 {
+		return c.JSON(http.StatusNotFound, Cake{"message": "No posts found"})
 	}
 
 	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_%s_users", sub, category, interval): topUsers})
