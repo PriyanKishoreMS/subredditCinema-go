@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
@@ -33,4 +34,26 @@ func GetFromReddit(h *Handlers, c echo.Context) error {
 		return err
 	}
 	return c.JSON(200, posts)
+}
+
+type PostFrequency struct {
+	Hour  int
+	Day   int
+	Count int
+}
+
+func StructurePostFrequency(postFrequency []data.PostFrequency) (map[int][]int, error) {
+	daysOfWeek := []int{0, 1, 2, 3, 4, 5, 6}
+	postFrequencyMap := make(map[int][]int)
+
+	for _, day := range daysOfWeek {
+		postFrequencyMap[day] = make([]int, 24)
+	}
+
+	for _, pf := range postFrequency {
+		day := pf.Day
+		postFrequencyMap[day][pf.Hour] = pf.Count
+	}
+
+	return postFrequencyMap, nil
 }

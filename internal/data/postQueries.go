@@ -134,4 +134,23 @@ const (
 	order by top_score desc
 	limit 5
 	`
+
+	FrequencyOfPostsQuery = `
+	select extract(
+        	hour
+        	from created_utc
+    	) as hour,
+    	extract(
+        	dow
+        	from created_utc
+    	) as day,
+    	count(*) as post_count
+	from reddit_posts
+	where subreddit = $1
+    	and created_utc >= now() - make_interval(days := $2)
+	group by subreddit,
+    	hour,
+    	day
+	order by day asc;
+	`
 )

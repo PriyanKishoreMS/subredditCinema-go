@@ -55,6 +55,36 @@ type TopPosts struct {
 	CategoryScore float64 `json:"category_score"`
 }
 
+type PostFrequency struct {
+	Hour  int
+	Day   int
+	Count int
+}
+
+func (p PostModel) GetPostFrequency(sub string, interval int) ([]PostFrequency, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := FrequencyOfPostsQuery
+
+	rows, err := p.DB.Query(ctx, query, sub, interval)
+	if err != nil {
+		return nil, fmt.Errorf("error in getting post frequency by day of week; %v", err)
+	}
+	defer rows.Close()
+
+	var postFrequency []PostFrequency
+	for rows.Next() {
+		var frequency PostFrequency
+		err = rows.Scan(&frequency.Hour, &frequency.Day, &frequency.Count)
+		if err != nil {
+			return nil, fmt.Errorf("error in scanning post frequency; %v", err)
+		}
+		postFrequency = append(postFrequency, frequency)
+	}
+	return postFrequency, nil
+}
+
 func (p PostModel) GetTopPosts(sub string, category string, interval int) ([]TopPosts, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
@@ -76,6 +106,7 @@ func (p PostModel) GetTopPosts(sub string, category string, interval int) ([]Top
 	if err != nil {
 		return nil, fmt.Errorf("error in getting top posts; %v", err)
 	}
+	defer rows.Close()
 
 	var topPosts []TopPosts
 	for rows.Next() {
@@ -108,6 +139,7 @@ func (p PostModel) GetTopUser(sub string, category string, interval int) ([]TopU
 	if err != nil {
 		return nil, fmt.Errorf("error in getting top users; %v", err)
 	}
+	defer rows.Close()
 
 	var topUsers []TopUsers
 	for rows.Next() {
@@ -141,32 +173,9 @@ func (p PostModel) DumpJson(filename string) error {
 		return fmt.Errorf("error in unmarshalling json; %v", err)
 	}
 
-	ctx, cancel := Handlectx()
-	defer cancel()
-
-	tx, err := p.DB.Begin(ctx)
+	err = p.InsertDailyPosts(postsWrapper.Posts)
 	if err != nil {
-		return fmt.Errorf("error in starting transaction; %v", err)
-	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback(ctx)
-			err = fmt.Errorf("transaction panicked: %v", r)
-		} else if err != nil {
-			tx.Rollback(ctx)
-		} else {
-			err = tx.Commit(ctx)
-		}
-	}()
-
-	query := InsertPostsQuery
-
-	for _, post := range postsWrapper.Posts {
-		_, err := tx.Exec(ctx, query, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
-		if err != nil {
-			return fmt.Errorf("error in inserting post: %v", err)
-		}
+		return fmt.Errorf("error in inserting daily posts; %v", err)
 	}
 
 	return nil

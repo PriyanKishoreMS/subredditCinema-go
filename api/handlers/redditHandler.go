@@ -23,6 +23,52 @@ const (
 	categoryTopAndControversial = "top_and_controversial"
 )
 
+func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
+	sub, err := h.Utils.ReadStringParam(c, "sub")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid sub %v", err)
+	}
+
+	if slices.Index(subReddits, sub) == -1 {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid sub"))
+		return fmt.Errorf("invalid sub")
+	}
+
+	interval, err := h.Utils.ReadStringParam(c, "interval")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid interval %v", err)
+	}
+
+	if interval != intervalWeek && interval != intervalMonth {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
+		return fmt.Errorf("invalid interval")
+	}
+
+	var intervalInt int
+
+	if interval == intervalWeek {
+		intervalInt = 7
+	} else {
+		intervalInt = 30
+	}
+
+	frequency, err := h.Data.Posts.GetPostFrequency(sub, intervalInt)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error getting post frequency %v", err)
+	}
+
+	frequencyMap, err := StructurePostFrequency(frequency)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error structuring post frequency %v", err)
+	}
+
+	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_frequency", sub, interval): frequencyMap})
+}
+
 func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
 
 	sub, err := h.Utils.ReadStringParam(c, "sub")

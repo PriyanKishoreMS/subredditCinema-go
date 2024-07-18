@@ -46,6 +46,9 @@ func main() {
 	}
 	log.Info("TMDB client initialized")
 
+	tmdbClient.SetClientConfig(*utils.HttpClientConfig)
+	tmdbClient.SetClientAutoRetry()
+
 	redditBot, err := graw.NewBotFromAgentFile("graw.ini", 0)
 	if err != nil {
 		log.Fatalf("error in initializing reddit bot; %v", err)
