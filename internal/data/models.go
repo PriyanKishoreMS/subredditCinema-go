@@ -8,7 +8,7 @@ import (
 )
 
 func Handlectx() (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*300)
 	return ctx, cancel
 }
 

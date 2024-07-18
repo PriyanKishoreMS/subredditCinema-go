@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -56,4 +59,73 @@ func StructurePostFrequency(postFrequency []data.PostFrequency) (map[int][]int, 
 	}
 
 	return postFrequencyMap, nil
+}
+func (h *Handlers) TimePerReq(c echo.Context) error {
+	timeNow := time.Now()
+
+	topPosts, err := GetDailyTopPosts(h)
+	if err != nil {
+		return err
+	}
+
+	timeAfer := time.Now()
+
+	timeDiff := timeAfer.Sub(timeNow).Seconds()
+
+	return c.JSON(http.StatusOK, Cake{"time": timeDiff, "posts": topPosts})
+}
+
+func (h *Handlers) ScaleData(c echo.Context) error {
+	var allPosts []data.Post
+	var after string
+
+	for i := 0; i < 36; i++ {
+		posts, resp, err := h.Reddit.Subreddit.ControversialPosts(context.Background(), "MalayalamMovies", &reddit.ListPostOptions{
+			ListOptions: reddit.ListOptions{
+				Limit: 100,
+				After: after,
+			},
+			Time: "year",
+		})
+		if err != nil {
+			h.Utils.InternalServerError(c, err)
+			return fmt.Errorf("error getting top posts %v", err)
+		}
+
+		for _, post := range posts {
+			allPosts = append(allPosts, data.Post{
+				ID:                   post.ID,
+				Name:                 post.FullID,
+				CreatedUTC:           post.Created.Time,
+				Permalink:            post.Permalink,
+				Title:                post.Title,
+				Category:             categoryControversial,
+				Selftext:             post.Body,
+				Score:                post.Score,
+				UpvoteRatio:          float64(post.UpvoteRatio),
+				NumComments:          post.NumberOfComments,
+				Subreddit:            post.SubredditName,
+				SubredditID:          post.SubredditID,
+				SubredditSubscribers: post.SubredditSubscribers,
+				Author:               post.Author,
+				AuthorFullname:       post.AuthorID,
+			})
+
+		}
+		log.Info(i, "th iteration with ", len(allPosts), " posts")
+		after = resp.After
+		log.Info("Inserting into db ", len(allPosts))
+
+		err = h.Data.Posts.InsertDailyPosts(allPosts)
+		if err != nil {
+			h.Utils.InternalServerError(c, err)
+			return fmt.Errorf("error inserting posts %v", err)
+		}
+
+		allPosts = nil
+	}
+
+	log.Info("Posts inserted successfully")
+
+	return c.JSON(http.StatusOK, Cake{"posts": "inserted"})
 }

@@ -22,11 +22,14 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 	api := e.Group("/api")
 	{
+		api.GET("", h.HomeFunc)
 		api.GET("/actors/:name", h.SearchActorsHandler)
 		api.GET("/movies/:name", h.SearchMoviesHandler)
 
 		reddit := api.Group("/reddit")
 		{
+			reddit.GET("/port", h.ScaleData)
+			// reddit.GET("/time", h.TimePerReq)
 			reddit.GET("/:sub/frequency/:interval", h.GetPostFrequencyHandler)
 			reddit.GET("/:sub/:category/users/:interval", h.GetTopUsersHandler)
 			reddit.GET("/:sub/:category/posts/:interval", h.GetTopPostsHandler)
@@ -41,9 +44,11 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		updateRedditPostsJob, err := scheduler.NewJob(gocron.DailyJob(1, atTimes), gocron.NewTask(func() {
 			log.Info("Running updateRedditPostsJob")
+
 			if err := h.UpdatePostsFromReddit(); err != nil {
 				log.Error("Error updating posts from Reddit: ", err)
 			}
+
 			log.Info("updateRedditPostsJob completed")
 		}))
 

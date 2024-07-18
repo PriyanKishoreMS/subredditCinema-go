@@ -2,7 +2,7 @@ package data
 
 const (
 	InsertPostsQuery = `
-		INSERT INTO reddit_posts (
+		INSERT INTO subreddit_posts (
     	id,
     	name,
     	created_utc,
@@ -24,20 +24,27 @@ const (
 	)
 	ON CONFLICT(id) DO
 	UPDATE
-	SET top_and_controversial = TRUE
-	WHERE reddit_posts.category <> EXCLUDED.category
-   	OR (reddit_posts.category = 'controversial' AND EXCLUDED.category = 'top')
+	SET 
+    	score = EXCLUDED.score,
+    	upvote_ratio = EXCLUDED.upvote_ratio,
+    	num_comments = EXCLUDED.num_comments,
+    	top_and_controversial = CASE
+        	WHEN subreddit_posts.category <> EXCLUDED.category
+        	OR (subreddit_posts.category = 'controversial' AND EXCLUDED.category = 'top')
+        	THEN TRUE
+        	ELSE subreddit_posts.top_and_controversial
+    	END
 	`
 
 	DeleteOldPostsQuery = `
-	DELETE FROM reddit_posts
-	WHERE created_utc < NOW() - INTERVAL '30 days'
+	DELETE FROM subreddit_posts
+	WHERE created_utc < NOW() - INTERVAL '365 days'
 	`
 
 	TopUsersQuery = `
 	select author as user,
     	count(*) as author_count
-	from reddit_posts
+	from subreddit_posts
 	where subreddit = $1
     	and (
         	category = 'top'
@@ -55,7 +62,7 @@ const (
 	ControversialUsersQuery = `
 	select author as user,
     	count(*) as author_count
-	from reddit_posts
+	from subreddit_posts
 	where subreddit = $1
     	and (
         	category = 'controversial'
@@ -82,7 +89,7 @@ const (
     	num_comments,
     	category,
     	round((score * upvote_ratio)::numeric, 2) as top_score
-	from reddit_posts
+	from subreddit_posts
 	where subreddit = $1
     	and category = 'top'
     	and created_utc > now() - make_interval(days := $2)
@@ -106,7 +113,7 @@ const (
         	(score * (1 - upvote_ratio) * num_comments)::numeric,
         	2
     	) as controversary_score
-	from reddit_posts
+	from subreddit_posts
 	where subreddit = $1
     	and category = 'controversial'
     	and created_utc > now() - make_interval(days := $2)
@@ -127,7 +134,7 @@ const (
     	num_comments,
     	category,
     	round((score * upvote_ratio)::numeric, 2) as top_score
-	from reddit_posts
+	from subreddit_posts
 	where subreddit = $1
     	and top_and_controversial = true
     	and created_utc > now() - make_interval(days := $2)
@@ -145,7 +152,7 @@ const (
         	from created_utc
     	) as day,
     	count(*) as post_count
-	from reddit_posts
+	from subreddit_posts
 	where subreddit = $1
     	and created_utc >= now() - make_interval(days := $2)
 	group by subreddit,

@@ -18,10 +18,14 @@ var subReddits []string = []string{
 const (
 	intervalWeek                = "week"
 	intervalMonth               = "month"
+	interval6Months             = "6months"
+	intervalYear                = "year"
 	categoryTop                 = "top"
 	categoryControversial       = "controversial"
 	categoryTopAndControversial = "top_and_controversial"
 )
+
+var intervals = []string{intervalWeek, intervalMonth, interval6Months, intervalYear}
 
 func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
 	sub, err := h.Utils.ReadStringParam(c, "sub")
@@ -41,7 +45,8 @@ func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
 		return fmt.Errorf("invalid interval %v", err)
 	}
 
-	if interval != intervalWeek && interval != intervalMonth {
+	if slices.Index(intervals, interval) == -1 {
+		fmt.Println(interval, "interval")
 		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
 		return fmt.Errorf("invalid interval")
 	}
@@ -50,8 +55,12 @@ func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
 
 	if interval == intervalWeek {
 		intervalInt = 7
-	} else {
+	} else if interval == intervalMonth {
 		intervalInt = 30
+	} else if interval == interval6Months {
+		intervalInt = 180
+	} else {
+		intervalInt = 365
 	}
 
 	frequency, err := h.Data.Posts.GetPostFrequency(sub, intervalInt)
@@ -88,11 +97,6 @@ func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
 		return fmt.Errorf("invalid interval %v", err)
 	}
 
-	if interval != intervalWeek && interval != intervalMonth {
-		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
-		return fmt.Errorf("invalid interval")
-	}
-
 	category, err := h.Utils.ReadStringParam(c, "category")
 	if err != nil {
 		h.Utils.BadRequest(c, err)
@@ -105,12 +109,22 @@ func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
 		return fmt.Errorf("invalid category")
 	}
 
+	if slices.Index(intervals, interval) == -1 {
+		fmt.Println(interval, "interval")
+		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
+		return fmt.Errorf("invalid interval")
+	}
+
 	var intervalInt int
 
 	if interval == intervalWeek {
 		intervalInt = 7
-	} else {
+	} else if interval == intervalMonth {
 		intervalInt = 30
+	} else if interval == interval6Months {
+		intervalInt = 180
+	} else {
+		intervalInt = 365
 	}
 
 	topPosts, err := h.Data.Posts.GetTopPosts(sub, category, intervalInt)
@@ -146,11 +160,6 @@ func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
 		return fmt.Errorf("invalid interval %v", err)
 	}
 
-	if interval != intervalWeek && interval != intervalMonth {
-		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
-		return fmt.Errorf("invalid interval")
-	}
-
 	category, err := h.Utils.ReadStringParam(c, "category")
 	if err != nil {
 		h.Utils.BadRequest(c, err)
@@ -163,12 +172,22 @@ func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
 		return fmt.Errorf("invalid category")
 	}
 
+	if slices.Index(intervals, interval) == -1 {
+		fmt.Println(interval, "interval")
+		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
+		return fmt.Errorf("invalid interval")
+	}
+
 	var intervalInt int
 
 	if interval == intervalWeek {
 		intervalInt = 7
-	} else {
+	} else if interval == intervalMonth {
 		intervalInt = 30
+	} else if interval == interval6Months {
+		intervalInt = 180
+	} else {
+		intervalInt = 365
 	}
 
 	topUsers, err := h.Data.Posts.GetTopUser(sub, category, intervalInt)
