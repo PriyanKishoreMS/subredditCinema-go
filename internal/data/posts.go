@@ -61,6 +61,31 @@ type PostFrequency struct {
 	Count int
 }
 
+func (p PostModel) GetTrendingWords(sub string, interval int) ([]string, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := GetAllTextsOfInterval
+
+	rows, err := p.DB.Query(ctx, query, sub, interval)
+	if err != nil {
+		return nil, fmt.Errorf("error in getting trending words; %v", err)
+	}
+	defer rows.Close()
+
+	var words []string
+	for rows.Next() {
+		var word string
+		err = rows.Scan(&word)
+		if err != nil {
+			return nil, fmt.Errorf("error in scanning trending words; %v", err)
+		}
+		words = append(words, word)
+	}
+
+	return words, nil
+}
+
 func (p PostModel) GetPostFrequency(sub string, interval int) ([]PostFrequency, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
@@ -98,6 +123,8 @@ func (p PostModel) GetTopPosts(sub string, category string, interval int) ([]Top
 		query = ControversialPostsQuery
 	case "top_and_controversial":
 		query = TopAndControversialPostsQuery
+	case "hated":
+		query = MostHatedPostsQuery
 	default:
 		return nil, fmt.Errorf("invalid category: %s", category)
 	}

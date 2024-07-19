@@ -1,6 +1,8 @@
 module github.com/priyankishorems/bollytics-go
 
-go 1.21.4
+go 1.22.0
+
+toolchain go1.22.5
 
 require (
 	github.com/cyruzin/golang-tmdb v1.6.4
@@ -10,6 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
+	github.com/toadharvard/stopwords-iso v0.1.5
 	github.com/turnage/graw v0.0.0-20201204201853-a177df1b5c91
 	github.com/vartanbeno/go-reddit/v2 v2.0.1
 	golang.org/x/time v0.5.0

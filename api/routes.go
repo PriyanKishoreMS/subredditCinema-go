@@ -28,18 +28,19 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		reddit := api.Group("/reddit")
 		{
-			reddit.GET("/port", h.ScaleData)
-			// reddit.GET("/time", h.TimePerReq)
-			reddit.GET("/:sub/frequency/:interval", h.GetPostFrequencyHandler)
-			reddit.GET("/:sub/:category/users/:interval", h.GetTopUsersHandler)
-			reddit.GET("/:sub/:category/posts/:interval", h.GetTopPostsHandler)
+
+			reddit.GET("/temp", h.GetFromReddit)
+			reddit.GET("/:sub/trending", h.GetTrendingWordsHandler)
+			reddit.GET("/:sub/frequency", h.GetPostFrequencyHandler)
+			reddit.GET("/:sub/:category/users", h.GetTopUsersHandler)
+			reddit.GET("/:sub/:category/posts", h.GetTopPostsHandler)
 		}
 
 		scheduler, err := gocron.NewScheduler()
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		atTime := gocron.NewAtTime(23, 45, 0)
+		atTime := gocron.NewAtTime(0, 0, 0)
 		atTimes := gocron.NewAtTimes(atTime)
 
 		updateRedditPostsJob, err := scheduler.NewJob(gocron.DailyJob(1, atTimes), gocron.NewTask(func() {

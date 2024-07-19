@@ -18,8 +18,10 @@ CREATE TABLE IF NOT EXISTS subreddit_posts (
     subreddit_subscribers BIGINT NOT NULL,
     author VARCHAR(64) NOT NULL,
     author_fullname VARCHAR(32) NOT NULL,
-    created_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
+    created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
+    version INT NOT NULL DEFAULT 1
 );
+
 CREATE INDEX IF NOT EXISTS idx_subreddit_posts_post_id ON subreddit_posts(post_id);
 CREATE INDEX IF NOT EXISTS idx_subreddit_posts_title ON subreddit_posts(title);
 CREATE INDEX IF NOT EXISTS idx_subreddit_posts_subreddit ON subreddit_posts(subreddit);

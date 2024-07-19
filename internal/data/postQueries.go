@@ -28,6 +28,7 @@ const (
     	score = EXCLUDED.score,
     	upvote_ratio = EXCLUDED.upvote_ratio,
     	num_comments = EXCLUDED.num_comments,
+		version = subreddit_posts.version + 1,
     	top_and_controversial = CASE
         	WHEN subreddit_posts.category <> EXCLUDED.category
         	OR (subreddit_posts.category = 'controversial' AND EXCLUDED.category = 'top')
@@ -122,6 +123,27 @@ const (
 	limit 5
 	`
 
+	MostHatedPostsQuery = `
+	select id,
+    	title,
+    	selftext,
+    	author,
+    	permalink,
+    	score,
+    	upvote_ratio,
+		subreddit,
+    	num_comments,
+    	category,
+		upvote_ratio as category_score
+	from subreddit_posts
+	where subreddit = $1
+    	and category = 'controversial'
+    	and created_utc > now() - make_interval(days := $2)
+    	and top_and_controversial = false
+	order by category_score asc
+	limit 5
+	`
+
 	TopAndControversialPostsQuery = `
 	select id,
     	title,
@@ -159,5 +181,12 @@ const (
     	hour,
     	day
 	order by day asc;
+	`
+
+	GetAllTextsOfInterval = `
+		SELECT title || ' ' || selftext AS full_text
+        FROM subreddit_posts
+        WHERE subreddit = $1
+		AND created_utc >= now() - make_interval(days := $2)
 	`
 )

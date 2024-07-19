@@ -23,9 +23,52 @@ const (
 	categoryTop                 = "top"
 	categoryControversial       = "controversial"
 	categoryTopAndControversial = "top_and_controversial"
+	categoryHated               = "hated"
 )
 
 var intervals = []string{intervalWeek, intervalMonth, interval6Months, intervalYear}
+
+func (h *Handlers) GetTrendingWordsHandler(c echo.Context) error {
+	sub, err := h.Utils.ReadStringParam(c, "sub")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid sub %v", err)
+	}
+
+	if slices.Index(subReddits, sub) == -1 {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid sub"))
+		return fmt.Errorf("invalid sub")
+	}
+
+	interval := h.Utils.ReadStringQuery(c.QueryParams(), "interval", intervalMonth)
+
+	if slices.Index(intervals, interval) == -1 {
+		fmt.Println(interval, "interval")
+		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
+		return fmt.Errorf("invalid interval")
+	}
+	var intervalInt int
+
+	if interval == intervalWeek {
+		intervalInt = 7
+	} else {
+		intervalInt = 30
+	}
+
+	allWords, err := h.Data.Posts.GetTrendingWords(sub, intervalInt)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error getting trending words %v", err)
+	}
+
+	trendingWords, err := getMostUsedWords(allWords, 100)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error getting most used words %v", err)
+	}
+
+	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_trending_words", sub, interval): trendingWords})
+}
 
 func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
 	sub, err := h.Utils.ReadStringParam(c, "sub")
@@ -39,18 +82,13 @@ func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
 		return fmt.Errorf("invalid sub")
 	}
 
-	interval, err := h.Utils.ReadStringParam(c, "interval")
-	if err != nil {
-		h.Utils.BadRequest(c, err)
-		return fmt.Errorf("invalid interval %v", err)
-	}
+	interval := h.Utils.ReadStringQuery(c.QueryParams(), "interval", intervalMonth)
 
 	if slices.Index(intervals, interval) == -1 {
 		fmt.Println(interval, "interval")
 		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
 		return fmt.Errorf("invalid interval")
 	}
-
 	var intervalInt int
 
 	if interval == intervalWeek {
@@ -91,11 +129,7 @@ func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
 		return fmt.Errorf("invalid sub")
 	}
 
-	interval, err := h.Utils.ReadStringParam(c, "interval")
-	if err != nil {
-		h.Utils.BadRequest(c, err)
-		return fmt.Errorf("invalid interval %v", err)
-	}
+	interval := h.Utils.ReadStringQuery(c.QueryParams(), "interval", intervalMonth)
 
 	category, err := h.Utils.ReadStringParam(c, "category")
 	if err != nil {
@@ -104,7 +138,7 @@ func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
 
 	}
 
-	if category != categoryTop && category != categoryControversial && category != categoryTopAndControversial {
+	if category != categoryTop && category != categoryControversial && category != categoryTopAndControversial && category != categoryHated {
 		h.Utils.BadRequest(c, fmt.Errorf("invalid category"))
 		return fmt.Errorf("invalid category")
 	}
@@ -154,11 +188,7 @@ func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
 		return fmt.Errorf("invalid sub")
 	}
 
-	interval, err := h.Utils.ReadStringParam(c, "interval")
-	if err != nil {
-		h.Utils.BadRequest(c, err)
-		return fmt.Errorf("invalid interval %v", err)
-	}
+	interval := h.Utils.ReadStringQuery(c.QueryParams(), "interval", intervalMonth)
 
 	category, err := h.Utils.ReadStringParam(c, "category")
 	if err != nil {
