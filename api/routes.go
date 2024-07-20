@@ -19,16 +19,19 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 	e.HideBanner = true
 	e.GET("/", h.HomeFunc)
+	e.GET("/login", h.LoginHandler)
+	e.GET("/callback", h.CallbackHandler)
 
 	api := e.Group("/api")
 	{
-		api.GET("", h.HomeFunc)
-		api.GET("/actors/:name", h.SearchActorsHandler)
-		api.GET("/movies/:name", h.SearchMoviesHandler)
+		tmdb := api.Group("/tmdb")
+		{
+			tmdb.GET("/actors/:name", h.SearchActorsHandler)
+			tmdb.GET("/movies/:name", h.SearchMoviesHandler)
+		}
 
 		reddit := api.Group("/reddit")
 		{
-
 			reddit.GET("/temp", h.GetFromReddit)
 			reddit.GET("/:sub/trending", h.GetTrendingWordsHandler)
 			reddit.GET("/:sub/frequency", h.GetPostFrequencyHandler)
@@ -40,7 +43,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		atTime := gocron.NewAtTime(0, 0, 0)
+		atTime := gocron.NewAtTime(23, 45, 0)
 		atTimes := gocron.NewAtTimes(atTime)
 
 		updateRedditPostsJob, err := scheduler.NewJob(gocron.DailyJob(1, atTimes), gocron.NewTask(func() {

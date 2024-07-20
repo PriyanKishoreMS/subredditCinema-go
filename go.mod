@@ -15,6 +15,7 @@ require (
 	github.com/toadharvard/stopwords-iso v0.1.5
 	github.com/turnage/graw v0.0.0-20201204201853-a177df1b5c91
 	github.com/vartanbeno/go-reddit/v2 v2.0.1
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.5.0
 )
 
@@ -44,7 +45,6 @@ require (
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
 	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

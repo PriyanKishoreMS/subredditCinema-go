@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"slices"
@@ -12,27 +11,50 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/internal/data"
-	sw "github.com/toadharvard/stopwords-iso"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
-var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "seen", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors"}
+var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors"}
 
-func (h *Handlers) InsertFromJson(c echo.Context) error {
-	files := []string{"sortedTopKollywood.json", "sortedControversialKollywood.json", "sortedTopMollywood.json", "sortedControversialMollywood.json", "sortedTopTollywood.json", "sortedControversialTollywood.json", "sortedTopBollywood.json", "sortedControversialBollywood.json"}
+type WordCount struct {
+	Word  string
+	Count int
+}
 
-	for _, file := range files {
-		err := h.Data.Posts.DumpJson(file)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
+func (h *Handlers) getMostUsedWords(texts []string, limit int) ([]WordCount, error) {
+	wordCounts := make(map[string]int)
+
+	for _, text := range texts {
+		cleanText := h.Stopword.ClearStringByLang(strings.ToLower(text), "en")
+
+		words := strings.Fields(cleanText)
+		for _, word := range words {
+			if len(word) > 4 {
+				if slices.Index(excludedWords, word) == -1 {
+					wordCounts[word]++
+				}
+			}
 		}
 	}
-	return c.JSON(http.StatusOK, Cake{"message": "Inserted from json completed broooo"})
+
+	var wordCountSlice []WordCount
+	for word, count := range wordCounts {
+		wordCountSlice = append(wordCountSlice, WordCount{word, count})
+	}
+
+	sort.Slice(wordCountSlice, func(i, j int) bool {
+		return wordCountSlice[i].Count > wordCountSlice[j].Count
+	})
+
+	if len(wordCountSlice) > limit {
+		return wordCountSlice[:limit], nil
+	}
+	return wordCountSlice, nil
 }
 
 func (h *Handlers) GetFromReddit(c echo.Context) error {
 
-	posts, _, err := h.Reddit.Subreddit.SearchPosts(context.Background(), "Bujji in Chennai", "kollywood", &reddit.ListPostSearchOptions{
+	posts, _, err := h.Reddit.Subreddit.SearchPosts(c.Request().Context(), "Bujji in Chennai", "kollywood", &reddit.ListPostSearchOptions{
 		ListPostOptions: reddit.ListPostOptions{
 			Time: "year",
 		},
@@ -87,7 +109,7 @@ func (h *Handlers) ScaleData(c echo.Context) error {
 	var after string
 
 	for i := 0; i < 36; i++ {
-		posts, resp, err := h.Reddit.Subreddit.ControversialPosts(context.Background(), "MalayalamMovies", &reddit.ListPostOptions{
+		posts, resp, err := h.Reddit.Subreddit.ControversialPosts(c.Request().Context(), "MalayalamMovies", &reddit.ListPostOptions{
 			ListOptions: reddit.ListOptions{
 				Limit: 100,
 				After: after,
@@ -151,7 +173,7 @@ func (h *Handlers) GetTrafficHandler(c echo.Context) error {
 		return fmt.Errorf("invalid sub")
 	}
 
-	day, hour, month, _, err := h.Reddit.Subreddit.Traffic(context.Background(), sub)
+	day, hour, month, _, err := h.Reddit.Subreddit.Traffic(c.Request().Context(), sub)
 	if err != nil {
 		h.Utils.InternalServerError(c, err)
 		return fmt.Errorf("error getting traffic %v", err)
@@ -164,45 +186,4 @@ func (h *Handlers) GetTrafficHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, Cake{"traffic": traffic})
-}
-
-type WordCount struct {
-	Word  string
-	Count int
-}
-
-func getMostUsedWords(texts []string, limit int) ([]WordCount, error) {
-	stopWordsMapping, err := sw.NewStopwordsMapping()
-	if err != nil {
-		return nil, fmt.Errorf("error creating stopwords mapping: %v", err)
-	}
-
-	wordCounts := make(map[string]int)
-
-	for _, text := range texts {
-		cleanText := stopWordsMapping.ClearStringByLang(strings.ToLower(text), "en")
-
-		words := strings.Fields(cleanText)
-		for _, word := range words {
-			if len(word) > 4 {
-				if slices.Index(excludedWords, word) == -1 {
-					wordCounts[word]++
-				}
-			}
-		}
-	}
-
-	var wordCountSlice []WordCount
-	for word, count := range wordCounts {
-		wordCountSlice = append(wordCountSlice, WordCount{word, count})
-	}
-
-	sort.Slice(wordCountSlice, func(i, j int) bool {
-		return wordCountSlice[i].Count > wordCountSlice[j].Count
-	})
-
-	if len(wordCountSlice) > limit {
-		return wordCountSlice[:limit], nil
-	}
-	return wordCountSlice, nil
 }

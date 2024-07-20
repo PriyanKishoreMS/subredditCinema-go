@@ -61,7 +61,7 @@ func (h *Handlers) GetTrendingWordsHandler(c echo.Context) error {
 		return fmt.Errorf("error getting trending words %v", err)
 	}
 
-	trendingWords, err := getMostUsedWords(allWords, 100)
+	trendingWords, err := h.getMostUsedWords(allWords, 100)
 	if err != nil {
 		h.Utils.InternalServerError(c, err)
 		return fmt.Errorf("error getting most used words %v", err)

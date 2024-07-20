@@ -12,6 +12,7 @@ import (
 	"github.com/priyankishorems/bollytics-go/api/handlers"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/priyankishorems/bollytics-go/utils"
+	sw "github.com/toadharvard/stopwords-iso"
 	graw "github.com/turnage/graw/reddit"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -68,6 +69,11 @@ func main() {
 		log.Fatalf("error in initializing go-reddit client; %v", err)
 	}
 
+	stopword, err := sw.NewStopwordsMapping()
+	if err != nil {
+		log.Fatalf("error in initializing stopwords; %v", err)
+	}
+
 	log.Info("Reddit client initialized")
 
 	h := &handlers.Handlers{
@@ -78,6 +84,7 @@ func main() {
 		Tmdb:      tmdbClient,
 		RedditBot: redditBot,
 		Reddit:    redditClient,
+		Stopword:  stopword,
 	}
 
 	e := api.SetupRoutes(h)

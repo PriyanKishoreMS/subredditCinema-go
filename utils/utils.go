@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/oauth2"
 )
 
 type Utilities interface {
@@ -30,6 +31,7 @@ type Utilities interface {
 	ReadIntQuery(qs url.Values, key string, defaultValue int) int
 	HandleFiles(c echo.Context, key, name string) ([]string, error)
 	GenerateSignature(orderId, id, secret string) string
+	MakeRedditRequest(c echo.Context, token *oauth2.Token, userAgent string, url string) (cake, error)
 
 	InternalServerError(c echo.Context, err error)
 	BadRequest(c echo.Context, err error)
@@ -223,4 +225,43 @@ func (u *utilsImpl) GenerateSignature(orderId, id, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(data))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func (u *utilsImpl) MakeRedditRequest(c echo.Context, token *oauth2.Token, userAgent string, url string) (cake, error) {
+
+	httpClient := OauthConfig.Client(c.Request().Context(), token)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		u.InternalServerError(c, fmt.Errorf("Failed to create request: %s", err))
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", userAgent)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		u.InternalServerError(c, fmt.Errorf("Failed to send request: %s", err))
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		u.InternalServerError(c, fmt.Errorf("Failed to read response: %s", err))
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		u.InternalServerError(c, fmt.Errorf("Reddit API returned non-OK status: %d, body: %s", resp.StatusCode, string(body)))
+		return nil, err
+	}
+
+	var data cake
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		u.InternalServerError(c, fmt.Errorf("Failed to parse user info: %s", err))
+		return nil, err
+	}
+	return data, nil
 }

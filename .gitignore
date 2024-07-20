@@ -4,3 +4,5 @@ dsnpsql.txt
 go.sum
 graw.ini
 /dump/*.json
+/public
+/vendor
