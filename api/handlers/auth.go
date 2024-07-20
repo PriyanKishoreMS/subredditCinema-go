@@ -11,6 +11,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type AuthResponse struct {
+	Username string `json:"username"`
+}
+
 func generateRandomState() string {
 	b := make([]byte, 16)
 	rand.Read(b)
@@ -29,7 +33,6 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 		h.Utils.BadRequest(c, fmt.Errorf("no code provided"))
 		return fmt.Errorf("no code provided")
 	}
-	fmt.Println("Received code:", code)
 
 	token, err := utils.OauthConfig.Exchange(c.Request().Context(), code)
 	if err != nil {
@@ -37,7 +40,7 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 		return err
 	}
 
-	user, err := h.Utils.MakeRedditRequest(c, token, utils.RedditUserAgentWeb, "https://oauth.reddit.com/api/v1/me")
+	user, err := h.GetAuthUserDataFromReddit(c, token, utils.RedditUserAgentWeb)
 	if err != nil {
 		h.Utils.BadRequest(c, fmt.Errorf("Failed to get user: %s", err))
 		return err

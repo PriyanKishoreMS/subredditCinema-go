@@ -11,7 +11,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/internal/data"
+	"github.com/priyankishorems/bollytics-go/utils"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
+	"golang.org/x/oauth2"
 )
 
 var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors"}
@@ -50,6 +52,26 @@ func (h *Handlers) getMostUsedWords(texts []string, limit int) ([]WordCount, err
 		return wordCountSlice[:limit], nil
 	}
 	return wordCountSlice, nil
+}
+
+func (h *Handlers) GetAuthUserDataFromReddit(c echo.Context, token *oauth2.Token, userAgent string) (Cake, error) {
+
+	httpClient := utils.OauthConfig.Client(c.Request().Context(), token)
+	url := "https://oauth.reddit.com/api/v1/me"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", userAgent)
+
+	user, err := h.Utils.MakeCustomRequest(httpClient, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (h *Handlers) GetFromReddit(c echo.Context) error {

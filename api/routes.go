@@ -12,6 +12,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORS())
 	e.Use(IPRateLimit(h))
+	e.Use(ManageSession(h))
 	e.Use(middleware.RemoveTrailingSlash())
 
 	// limiterStore := middleware.NewRateLimiterMemoryStore(20)

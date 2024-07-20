@@ -3,13 +3,69 @@ package api
 import (
 	"errors"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/labstack/echo/v4"
 	"github.com/priyankishorems/bollytics-go/api/handlers"
 	"golang.org/x/time/rate"
 )
+
+func ManageSession(h *handlers.Handlers) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ctx := c.Request().Context()
+
+			var token string
+			cookie, err := c.Cookie(h.SessionManager.Cookie.Name)
+			if err == nil {
+				token = cookie.Value
+			}
+
+			ctx, err = h.SessionManager.Load(ctx, token)
+			if err != nil {
+				return err
+			}
+
+			c.SetRequest(c.Request().WithContext(ctx))
+
+			c.Response().Before(func() {
+				if h.SessionManager.Status(ctx) != scs.Unmodified {
+					responseCookie := &http.Cookie{
+						Name:     h.SessionManager.Cookie.Name,
+						Path:     h.SessionManager.Cookie.Path,
+						Domain:   h.SessionManager.Cookie.Domain,
+						Secure:   h.SessionManager.Cookie.Secure,
+						HttpOnly: h.SessionManager.Cookie.HttpOnly,
+						SameSite: h.SessionManager.Cookie.SameSite,
+					}
+
+					switch h.SessionManager.Status(ctx) {
+					case scs.Modified:
+						token, _, err := h.SessionManager.Commit(ctx)
+						if err != nil {
+							panic(err)
+						}
+
+						responseCookie.Value = token
+
+					case scs.Destroyed:
+						responseCookie.Expires = time.Unix(1, 0)
+						responseCookie.MaxAge = -1
+					}
+
+					c.SetCookie(responseCookie)
+					h.Utils.AddHeaderIfMissing(c.Response(), "Cache-Control", `no-cache="Set-Cookie"`)
+					h.Utils.AddHeaderIfMissing(c.Response(), "Vary", "Cookie")
+				}
+			})
+
+			return next(c)
+		}
+	}
+}
 
 func IPRateLimit(h *handlers.Handlers) echo.MiddlewareFunc {
 

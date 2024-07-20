@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -15,14 +16,15 @@ import (
 
 type Cake map[string]interface{}
 type Handlers struct {
-	Config    utils.Config
-	Validate  validator.Validate
-	Utils     utils.Utilities
-	Data      data.Models
-	Tmdb      *tmdb.Client
-	RedditBot graw.Bot
-	Reddit    *reddit.Client
-	Stopword  sw.StopwordsMapping
+	Config         utils.Config
+	Validate       validator.Validate
+	Utils          utils.Utilities
+	Data           data.Models
+	Tmdb           *tmdb.Client
+	RedditBot      graw.Bot
+	Reddit         *reddit.Client
+	Stopword       sw.StopwordsMapping
+	SessionManager *scs.SessionManager
 }
 
 func (h *Handlers) HomeFunc(c echo.Context) error {
