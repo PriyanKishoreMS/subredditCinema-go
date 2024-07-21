@@ -9,9 +9,38 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/api/handlers"
 	"golang.org/x/time/rate"
 )
+
+func AuthenticateUserSession(h *handlers.Handlers) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ctx := c.Request().Context()
+
+			reddit_id := h.SessionManager.GetString(ctx, "reddit_id")
+			if reddit_id == "" {
+				h.Utils.UserUnAuthorizedResponse(c)
+				return errors.New("no session")
+			}
+
+			exists, err := h.Data.Users.CheckUserExists(reddit_id)
+			if err != nil {
+				h.Utils.InternalServerError(c, err)
+				return err
+			}
+
+			if !exists {
+				h.Utils.UserUnAuthorizedResponse(c)
+				return errors.New("user not found")
+			}
+
+			c.Set("reddit_id", reddit_id)
+			return next(c)
+		}
+	}
+}
 
 func ManageSession(h *handlers.Handlers) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -46,7 +75,7 @@ func ManageSession(h *handlers.Handlers) echo.MiddlewareFunc {
 					case scs.Modified:
 						token, _, err := h.SessionManager.Commit(ctx)
 						if err != nil {
-							panic(err)
+							log.Error("Failed to commit session: ", err)
 						}
 
 						responseCookie.Value = token

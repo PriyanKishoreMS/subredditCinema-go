@@ -40,11 +40,19 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 		return err
 	}
 
-	user, err := h.GetAuthUserDataFromReddit(c, token, utils.RedditUserAgentWeb)
+	userdata, err := h.GetAuthUserDataFromReddit(c, token, utils.RedditUserAgentWeb)
 	if err != nil {
 		h.Utils.BadRequest(c, fmt.Errorf("Failed to get user: %s", err))
 		return err
 	}
+
+	user, err := h.Data.Users.InsertUser(userdata.Name, userdata.Avatar, userdata.RedditID)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	h.SessionManager.Put(c.Request().Context(), "reddit_id", user.Reddit_id)
 
 	return c.JSON(http.StatusOK, user)
 }

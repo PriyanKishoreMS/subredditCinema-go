@@ -15,7 +15,6 @@ import (
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/priyankishorems/bollytics-go/utils"
 	sw "github.com/toadharvard/stopwords-iso"
-	graw "github.com/turnage/graw/reddit"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
@@ -52,12 +51,12 @@ func main() {
 	tmdbClient.SetClientConfig(*utils.HttpClientConfig)
 	tmdbClient.SetClientAutoRetry()
 
-	redditBot, err := graw.NewBotFromAgentFile("graw.ini", 0)
-	if err != nil {
-		log.Fatalf("error in initializing reddit bot; %v", err)
-	}
+	// redditBot, err := graw.NewBotFromAgentFile("graw.ini", 0)
+	// if err != nil {
+	// 	log.Fatalf("error in initializing reddit bot; %v", err)
+	// }
 
-	log.Info("Graw Bot initialized")
+	// log.Info("Graw Bot initialized")
 
 	redditCredentials := reddit.Credentials{
 		ID:       utils.RedditId,
@@ -80,7 +79,7 @@ func main() {
 	sessionManager.Lifetime = 6 * time.Hour
 	sessionManager.IdleTimeout = 20 * time.Minute
 	sessionManager.Cookie.Name = "login-session"
-	sessionManager.Cookie.Domain = "localhost:3000"
+	// sessionManager.Cookie.Domain = "localhost:3000"
 	sessionManager.Cookie.HttpOnly = true
 	// sessionManager.Cookie.Path = "/example/"
 	sessionManager.Cookie.Persist = true
@@ -90,12 +89,12 @@ func main() {
 	log.Info("Reddit client initialized")
 
 	h := &handlers.Handlers{
-		Config:         *cfg,
-		Validate:       validate,
-		Utils:          utils.NewUtils(),
-		Data:           data.NewModel(dbPool),
-		Tmdb:           tmdbClient,
-		RedditBot:      redditBot,
+		Config:   *cfg,
+		Validate: validate,
+		Utils:    utils.NewUtils(),
+		Data:     data.NewModel(dbPool),
+		Tmdb:     tmdbClient,
+		// RedditBot:      redditBot,
 		Reddit:         redditClient,
 		Stopword:       stopword,
 		SessionManager: sessionManager,

@@ -184,9 +184,32 @@ const (
 	`
 
 	GetAllTextsOfInterval = `
-		SELECT title || ' ' || selftext AS full_text
-        FROM subreddit_posts
-        WHERE subreddit = $1
-		AND created_utc >= now() - make_interval(days := $2)
+    SELECT 
+      	title || ' ' || selftext AS full_text 
+    FROM 
+      	subreddit_posts 
+    WHERE 
+      	subreddit = $1 
+      	AND created_utc >= now() - make_interval(days := $2)
+	`
+
+	InsertUserQuery = `	
+    INSERT INTO users (reddit_id, username, avatar) 
+    VALUES 
+      	($1, $2, $3) ON CONFLICT (username) DO 
+    UPDATE 
+    SET 
+      	avatar = $3, 
+      	version = users.version + 1,
+		last_login = NOW()
+	RETURNING id, reddit_id, username, avatar
+	`
+
+	CheckUserExistsQuery = `
+	SELECT EXISTS(
+		SELECT 1
+		FROM users
+		WHERE reddit_id = $1
+	)
 	`
 )

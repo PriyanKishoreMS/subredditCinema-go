@@ -31,5 +31,5 @@ CREATE INDEX IF NOT EXISTS idx_subreddit_posts_created_utc ON subreddit_posts(cr
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS subreddit_posts;
+-- DROP TABLE IF EXISTS subreddit_posts;
 -- +goose StatementEnd

@@ -15,13 +15,11 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e.Use(ManageSession(h))
 	e.Use(middleware.RemoveTrailingSlash())
 
-	// limiterStore := middleware.NewRateLimiterMemoryStore(20)
-	// e.Use(middleware.RateLimiter(limiterStore))
-
 	e.HideBanner = true
 	e.GET("/", h.HomeFunc)
 	e.GET("/login", h.LoginHandler)
 	e.GET("/callback", h.CallbackHandler)
+	e.GET("/verify", h.VerifySession, AuthenticateUserSession(h))
 
 	api := e.Group("/api")
 	{

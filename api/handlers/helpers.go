@@ -54,7 +54,13 @@ func (h *Handlers) getMostUsedWords(texts []string, limit int) ([]WordCount, err
 	return wordCountSlice, nil
 }
 
-func (h *Handlers) GetAuthUserDataFromReddit(c echo.Context, token *oauth2.Token, userAgent string) (Cake, error) {
+type UserType struct {
+	RedditID string `json:"reddit_id"`
+	Name     string `json:"name"`
+	Avatar   string `json:"avatar"`
+}
+
+func (h *Handlers) GetAuthUserDataFromReddit(c echo.Context, token *oauth2.Token, userAgent string) (*UserType, error) {
 
 	httpClient := utils.OauthConfig.Client(c.Request().Context(), token)
 	url := "https://oauth.reddit.com/api/v1/me"
@@ -71,7 +77,13 @@ func (h *Handlers) GetAuthUserDataFromReddit(c echo.Context, token *oauth2.Token
 		return nil, err
 	}
 
-	return user, nil
+	var userData UserType = UserType{
+		RedditID: user["id"].(string),
+		Name:     user["name"].(string),
+		Avatar:   user["snoovatar_img"].(string),
+	}
+
+	return &userData, nil
 }
 
 func (h *Handlers) GetFromReddit(c echo.Context) error {

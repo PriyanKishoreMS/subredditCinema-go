@@ -28,6 +28,10 @@ const (
 
 var intervals = []string{intervalWeek, intervalMonth, interval6Months, intervalYear}
 
+func (h *Handlers) VerifySession(c echo.Context) error {
+	return c.JSON(http.StatusOK, Cake{"message": "Session verified"})
+}
+
 func (h *Handlers) GetTrendingWordsHandler(c echo.Context) error {
 	sub, err := h.Utils.ReadStringParam(c, "sub")
 	if err != nil {
