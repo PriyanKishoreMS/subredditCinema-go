@@ -29,7 +29,8 @@ const (
 var intervals = []string{intervalWeek, intervalMonth, interval6Months, intervalYear}
 
 func (h *Handlers) VerifySession(c echo.Context) error {
-	return c.JSON(http.StatusOK, Cake{"message": "Session verified"})
+	reddit_id := c.Get("reddit_id").(string)
+	return c.JSON(http.StatusOK, Cake{"message": "Session verified", "reddit_id": reddit_id})
 }
 
 func (h *Handlers) GetTrendingWordsHandler(c echo.Context) error {
@@ -251,8 +252,7 @@ func (h *Handlers) UpdatePostsFromReddit() error {
 
 	allPosts := append(topPosts, controversialPosts...)
 
-	err = h.Data.Posts.InsertDailyPosts(allPosts)
-	if err != nil {
+	if err = h.Data.Posts.InsertDailyPosts(allPosts); err != nil {
 		return err
 	}
 

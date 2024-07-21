@@ -9,14 +9,14 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-type cake map[string]interface{}
+type Cake map[string]interface{}
 
 func (u *utilsImpl) logError(c echo.Context, err error) {
 	log.Error(err)
 }
 
 func (u *utilsImpl) resposeError(c echo.Context, status int, message interface{}) {
-	err := c.JSON(status, cake{"error": message})
+	err := c.JSON(status, Cake{"error": message})
 	if err != nil {
 		u.logError(c, err)
 		c.Response().WriteHeader(http.StatusInternalServerError)
@@ -60,7 +60,7 @@ func (u *utilsImpl) RateLimitExceededResponse(c echo.Context) {
 	u.resposeError(c, http.StatusTooManyRequests, message)
 }
 
-func (u *utilsImpl) CustomErrorResponse(c echo.Context, message cake, status int, err error) {
+func (u *utilsImpl) CustomErrorResponse(c echo.Context, message Cake, status int, err error) {
 	u.logError(c, err)
 	u.resposeError(c, status, message)
 }

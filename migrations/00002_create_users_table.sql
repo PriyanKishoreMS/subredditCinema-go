@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    reddit_id VARCHAR(255) UNIQUE NOT NULL,
+    reddit_uid VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(255) UNIQUE NOT NULL,
     avatar VARCHAR(255) NOT NULL,
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_users_reddit_id ON users(reddit_id);
+CREATE INDEX IF NOT EXISTS idx_users_reddit_uid ON users(reddit_uid);
 -- +goose StatementEnd
 
 -- +goose Down

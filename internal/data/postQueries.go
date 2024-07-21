@@ -194,7 +194,7 @@ const (
 	`
 
 	InsertUserQuery = `	
-    INSERT INTO users (reddit_id, username, avatar) 
+    INSERT INTO users (reddit_uid, username, avatar) 
     VALUES 
       	($1, $2, $3) ON CONFLICT (username) DO 
     UPDATE 
@@ -202,14 +202,14 @@ const (
       	avatar = $3, 
       	version = users.version + 1,
 		last_login = NOW()
-	RETURNING id, reddit_id, username, avatar
+	RETURNING id, reddit_uid, username, avatar
 	`
 
 	CheckUserExistsQuery = `
 	SELECT EXISTS(
 		SELECT 1
 		FROM users
-		WHERE reddit_id = $1
+		WHERE reddit_uid = $1
 	)
 	`
 )

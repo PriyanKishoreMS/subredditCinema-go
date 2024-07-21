@@ -22,7 +22,7 @@ import (
 
 type Utilities interface {
 	ConvertToInt64(str string) (int64, error)
-	ReadIntParam(c echo.Context, str string) (int64, error)
+	ReadIntParam(c echo.Context, str string) (int, error)
 	ReadStringParam(c echo.Context, str string) (string, error)
 	ReadJSON(c echo.Context, dst interface{}) error
 	ReadFormData(c echo.Context, dst interface{}) error
@@ -40,7 +40,7 @@ type Utilities interface {
 	EditConflictResponse(c echo.Context)
 	UserUnAuthorizedResponse(c echo.Context)
 	RateLimitExceededResponse(c echo.Context)
-	CustomErrorResponse(c echo.Context, message cake, status int, err error)
+	CustomErrorResponse(c echo.Context, message Cake, status int, err error)
 	ValidationError(c echo.Context, err error)
 }
 
@@ -61,9 +61,9 @@ func (u *utilsImpl) ConvertToInt64(str string) (int64, error) {
 	return integer, nil
 }
 
-func (u *utilsImpl) ReadIntParam(c echo.Context, str string) (int64, error) {
+func (u *utilsImpl) ReadIntParam(c echo.Context, str string) (int, error) {
 	param := c.Param(str)
-	id, err := u.ConvertToInt64(param)
+	id, err := strconv.Atoi(param)
 	if err != nil || id < 1 {
 		return 0, errors.New("invalid parameter")
 	}
@@ -243,7 +243,7 @@ func (u *utilsImpl) MakeCustomRequest(httpClient *http.Client, req *http.Request
 		return nil, err
 	}
 
-	var data cake
+	var data Cake
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return nil, err

@@ -23,6 +23,16 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 	api := e.Group("/api")
 	{
+		poll := api.Group("/poll")
+		{
+			poll.GET("/all", h.GetAllPollsHandler)
+			poll.GET("/:poll_id", h.GetPollByIDHandler)
+			// todo Should Add Middleware to Authenticate User before deploying
+			poll.POST("/create", h.CreatePollHandler)
+			poll.POST("/vote/:poll_id/:option_id", h.CreatePollVoteHandler)
+			poll.DELETE("/delete/:poll_id", h.DeletePollByCreatorHandler)
+		}
+
 		tmdb := api.Group("/tmdb")
 		{
 			tmdb.GET("/actors/:name", h.SearchActorsHandler)

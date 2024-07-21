@@ -8,12 +8,12 @@ type UserModel struct {
 
 type User struct {
 	ID        int
-	Reddit_id string
+	RedditUID string
 	Username  string
 	Avatar    string
 }
 
-func (u *UserModel) CheckUserExists(reddit_id string) (bool, error) {
+func (u UserModel) CheckUserExists(reddit_id string) (bool, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
@@ -29,7 +29,7 @@ func (u *UserModel) CheckUserExists(reddit_id string) (bool, error) {
 	return exists, nil
 }
 
-func (u *UserModel) InsertUser(username, avatar, reddit_id string) (User, error) {
+func (u UserModel) InsertUser(username, avatar, reddit_id string) (User, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
@@ -41,7 +41,7 @@ func (u *UserModel) InsertUser(username, avatar, reddit_id string) (User, error)
 
 	err := row.Scan(
 		&user.ID,
-		&user.Reddit_id,
+		&user.RedditUID,
 		&user.Username,
 		&user.Avatar,
 	)

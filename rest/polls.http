@@ -1,0 +1,33 @@
+@host = http://localhost:3000
+
+post {{host}}/api/poll/create
+Content-Type: application/json
+
+{
+    "subreddit": "kollywood",
+    "title" : "Who is the best heroine in Kollywood?",
+    "options": [
+        {
+            "id": 1,
+            "text": "Nayanthara"
+        },
+        {
+            "id": 2,
+            "text": "Trisha"
+        },
+        {
+            "id": 3,
+            "text": "Samantha"
+        },
+        {
+            "id": 4,
+            "text": "Keerthy Suresh"
+        }
+    ]
+}
+
+###
+post {{host}}/api/poll/vote/5/2
+
+###
+delete {{host}}/api/poll/delete/4

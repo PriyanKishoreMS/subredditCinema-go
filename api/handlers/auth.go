@@ -52,7 +52,7 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 		return err
 	}
 
-	h.SessionManager.Put(c.Request().Context(), "reddit_id", user.Reddit_id)
+	h.SessionManager.Put(c.Request().Context(), "reddit_id", user.RedditUID)
 
 	return c.JSON(http.StatusOK, user)
 }
