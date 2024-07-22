@@ -5,17 +5,17 @@ post {{host}}/api/survey/create
 Content-Type: application/json
 
 {
-    "title" :"This is a test survey",
+    "title" :"This is a another test survey",
     "subreddit": "kollywood"
 }
 
 ###
-post {{host}}/api/survey/questions/1
+post {{host}}/api/survey/questions/4
 Content-Type: application/json
 
 [
     {
-        "question_text": "What is your favourite movie?",
+        "question_text": "What is your another favourite movie?",
         "options": [
             {
                 "id": 1,
@@ -32,7 +32,7 @@ Content-Type: application/json
         ]
     },
     {
-        "question_text": "What is your favourite actor?",
+        "question_text": "What is your another favourite actor?",
         "options": [
             {
                 "id": 1,
@@ -49,7 +49,7 @@ Content-Type: application/json
         ]
     },
     {
-        "question_text": "What is your favourite actress?",
+        "question_text": "What is your another favourite actress?",
         "options": [
             {
                 "id": 1,
@@ -68,21 +68,21 @@ Content-Type: application/json
 ]
 
 ###
-post {{host}}/api/survey/response/1
+post {{host}}/api/survey/response/4
 Content-Type: application/json
 
 {
     "response_data": [
         {
-            "id": 1,
-            "option_id": 1,
-        },
-        {
-            "id": 2,
+            "id": 10,
             "option_id": 2
         },
         {
-            "id": 3,
+            "id": 11,
+            "option_id": 1
+        },
+        {
+            "id": 12,
             "option_id": 3
         }
     ]

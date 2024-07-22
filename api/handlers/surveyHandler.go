@@ -37,12 +37,13 @@ func (h *Handlers) CreateSurveyHandler(c echo.Context) error {
 		return err
 	}
 
-	if err := h.Data.Surveys.CreateSurvey(reddit_uid, input.Subreddit, input.Title, input.Description, input.EndTime); err != nil {
+	id, err := h.Data.Surveys.CreateSurvey(reddit_uid, input.Subreddit, input.Title, input.Description, input.EndTime)
+	if err != nil {
 		h.Utils.InternalServerError(c, fmt.Errorf("Error creating survey: %v", err))
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, Cake{"message": "Survey Created Successfully"})
+	return c.JSON(http.StatusCreated, Cake{"id": id})
 }
 
 func (h *Handlers) CreateSurveyQuestionsHandler(c echo.Context) error {
@@ -161,10 +162,6 @@ func (h *Handlers) CreateSurveyResponseHandler(c echo.Context) error {
 			h.Utils.CustomErrorResponse(c, utils.Cake{"error": "response data should have question_id"}, http.StatusBadRequest, nil)
 			return err
 		}
-		if response.MultipleOptions == nil && response.OptionID == 0 && response.Text == "" {
-			h.Utils.CustomErrorResponse(c, utils.Cake{"error": "response data should have either text or option_id or multiple_options_id"}, http.StatusBadRequest, nil)
-			return err
-		}
 		if err := h.Validate.Struct(response); err != nil {
 			h.Utils.ValidationError(c, err)
 			return err
@@ -177,4 +174,37 @@ func (h *Handlers) CreateSurveyResponseHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, Cake{"message": "Survey Response Created Successfully"})
+}
+
+func (h *Handlers) GetSurveyByIDHandler(c echo.Context) error {
+	SurveyID, err := h.Utils.ReadIntParam(c, "survey_id")
+	if err != nil {
+		h.Utils.BadRequest(c, fmt.Errorf("Invalid Survey ID: %v", err))
+		return err
+	}
+
+	survey, err := h.Data.Surveys.GetSurveyQuestionByID(SurveyID)
+	if err != nil {
+		h.Utils.InternalServerError(c, fmt.Errorf("Error getting survey: %v", err))
+		return err
+	}
+
+	return c.JSON(http.StatusOK, survey)
+}
+
+// todo should be let if the requester is creator of the survey or if the survey is public
+func (h *Handlers) GetSurveyResponsesByIDHandler(c echo.Context) error {
+	SurveyID, err := h.Utils.ReadIntParam(c, "survey_id")
+	if err != nil {
+		h.Utils.BadRequest(c, fmt.Errorf("Invalid Survey ID: %v", err))
+		return err
+	}
+
+	responses, err := h.Data.Surveys.GetSurveyResponses(SurveyID)
+	if err != nil {
+		h.Utils.InternalServerError(c, fmt.Errorf("Error getting survey responses: %v", err))
+		return err
+	}
+
+	return c.JSON(http.StatusOK, responses)
 }

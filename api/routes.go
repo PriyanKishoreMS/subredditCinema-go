@@ -25,7 +25,9 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	{
 		survey := api.Group("/survey")
 		{
+			survey.GET("/:survey_id", h.GetSurveyByIDHandler)
 			// todo Should Add Middleware to Authenticate User before deploying
+			survey.GET(("/response/:survey_id"), h.GetSurveyResponsesByIDHandler)
 			survey.POST("/create", h.CreateSurveyHandler)
 			survey.POST("/questions/:survey_id", h.CreateSurveyQuestionsHandler)
 			survey.POST("/response/:survey_id", h.CreateSurveyResponseHandler)

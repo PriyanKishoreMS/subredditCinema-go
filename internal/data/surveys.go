@@ -23,25 +23,46 @@ type Question struct {
 	IsRequired   bool            `json:"is_required"`
 }
 
-type QuestionResponse struct {
-	ID              int    `json:"id" validate:"required"`
-	Text            string `json:"text,omitempty"`
-	OptionID        int    `json:"option_id,omitempty"`
-	MultipleOptions []int  `json:"multiple_options_id,omitempty"`
+type FullQuestionData struct {
+	SurveyID    int             `json:"survey_id"`
+	RedditUID   string          `json:"reddit_uid"`
+	Subreddit   string          `json:"subreddit"`
+	Title       string          `json:"title"`
+	Description string          `json:"description"`
+	StartTime   time.Time       `json:"start_time"`
+	EntTime     time.Time       `json:"end_time"`
+	IsActive    bool            `json:"is_active"`
+	Questions   json.RawMessage `json:"questions"`
 }
 
-func (s SurveysModel) CreateSurvey(redditUID, subreddit, title, description string, endTime time.Time) error {
+type QuestionResponse struct {
+	ID int `json:"id" validate:"required"`
+	// Text            string `json:"text,omitempty"`
+	OptionID int `json:"option_id" validate:"required"`
+	// MultipleOptions []int  `json:"multiple_options_id,omitempty"`
+}
+
+type FullResponseData struct {
+	QuestionID             int             `json:"question_id"`
+	OptionCounts           json.RawMessage `json:"option_counts"`
+	TotalQuestionResponses int             `json:"total_question_responses"`
+}
+
+func (s SurveysModel) CreateSurvey(redditUID, subreddit, title, description string, endTime time.Time) (int, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
 	query := CreateSurveyQuery
 
-	_, err := s.DB.Exec(ctx, query, redditUID, subreddit, title, description, endTime)
+	var id int
+	row := s.DB.QueryRow(ctx, query, redditUID, subreddit, title, description, endTime)
+	err := row.Scan(&id)
+
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func (s SurveysModel) CreateSurveyQuestions(surveyID int, questions *[]Question, options [][]SuveyQuestionOption) error {
@@ -72,6 +93,47 @@ func (s SurveysModel) CreateSurveyResponse(surveyID int, redditUID string, respo
 	}
 
 	return nil
+}
+
+func (s SurveysModel) GetSurveyQuestionByID(surveyID int) (*FullQuestionData, error) {
+
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := GetSurveyQuestionsQuery
+
+	var survey FullQuestionData
+	err := s.DB.QueryRow(ctx, query, surveyID).Scan(&survey.SurveyID, &survey.RedditUID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.StartTime, &survey.EntTime, &survey.IsActive, &survey.Questions)
+	if err != nil {
+		return nil, err
+	}
+
+	return &survey, nil
+}
+
+func (s SurveysModel) GetSurveyResponses(surveyID int) ([]FullResponseData, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := GetSurveyResponseDataQuery
+
+	rows, err := s.DB.Query(ctx, query, surveyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var responses []FullResponseData
+	for rows.Next() {
+		var response FullResponseData
+		err := rows.Scan(&response.QuestionID, &response.OptionCounts, &response.TotalQuestionResponses)
+		if err != nil {
+			return nil, err
+		}
+		responses = append(responses, response)
+	}
+
+	return responses, nil
 }
 
 func (s SurveysModel) GetSurveyOwner(reddit_uid string, survey_id int) (bool, error) {
