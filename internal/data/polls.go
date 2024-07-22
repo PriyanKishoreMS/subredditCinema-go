@@ -11,7 +11,7 @@ type PollsModel struct {
 	DB *pgx.Pool
 }
 
-type Option struct {
+type PollOption struct {
 	ID     int    `json:"id" validate:"required"`
 	Text   string `json:"text" validate:"required"`
 	ImgURL string `json:"img_url,omitempty"`
@@ -44,7 +44,7 @@ type PollDataResponse struct {
 	VoteCount    json.RawMessage `json:"vote_count"`
 }
 
-func (p PollsModel) InsertNewPoll(poll *Poll, options []Option) error {
+func (p PollsModel) InsertNewPoll(poll *Poll, options []PollOption) error {
 	ctx, cancel := Handlectx()
 	defer cancel()
 

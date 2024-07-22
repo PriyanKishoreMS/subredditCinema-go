@@ -1,0 +1,89 @@
+@host = http://localhost:3000
+
+
+post {{host}}/api/survey/create
+Content-Type: application/json
+
+{
+    "title" :"This is a test survey",
+    "subreddit": "kollywood"
+}
+
+###
+post {{host}}/api/survey/questions/1
+Content-Type: application/json
+
+[
+    {
+        "question_text": "What is your favourite movie?",
+        "options": [
+            {
+                "id": 1,
+                "text": "Vada Chennai"
+            },
+            {
+                "id": 2,
+                "text": "Asuran"
+            },
+            {
+                "id": 3,
+                "text": "Kaithi"
+            }
+        ]
+    },
+    {
+        "question_text": "What is your favourite actor?",
+        "options": [
+            {
+                "id": 1,
+                "text": "Dhanush"
+            },
+            {
+                "id": 2,
+                "text": "Vijay"
+            },
+            {
+                "id": 3,
+                "text": "Ajith"
+            }
+        ]
+    },
+    {
+        "question_text": "What is your favourite actress?",
+        "options": [
+            {
+                "id": 1,
+                "text": "Nayanthara"
+            },
+            {
+                "id": 2,
+                "text": "Trisha"
+            },
+            {
+                "id": 3,
+                "text": "Samantha"
+            }
+        ]
+    }
+]
+
+###
+post {{host}}/api/survey/response/1
+Content-Type: application/json
+
+{
+    "response_data": [
+        {
+            "id": 1,
+            "option_id": 1,
+        },
+        {
+            "id": 2,
+            "option_id": 2
+        },
+        {
+            "id": 3,
+            "option_id": 3
+        }
+    ]
+}

@@ -30,4 +30,4 @@ Content-Type: application/json
 post {{host}}/api/poll/vote/5/2
 
 ###
-delete {{host}}/api/poll/delete/4
+delete {{host}}/api/poll/delete/7

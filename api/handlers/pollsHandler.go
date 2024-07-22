@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	reddit_uid_test = "80085"
+	reddit_uid_test = "eh2wrd0r"
 )
 
 func (h *Handlers) CreatePollHandler(c echo.Context) error {
@@ -49,7 +49,7 @@ func (h *Handlers) CreatePollHandler(c echo.Context) error {
 		input.EndTime = time.Now().Add(24 * time.Hour)
 	}
 
-	var options []data.Option
+	var options []data.PollOption
 
 	if err := json.Unmarshal(input.Options, &options); err != nil {
 		h.Utils.InternalServerError(c, fmt.Errorf("error in unmarshalling options; %v", err))
