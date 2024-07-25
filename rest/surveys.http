@@ -75,7 +75,7 @@ Content-Type: application/json
     "response_data": [
         {
             "id": 10,
-            "option_id": 2
+            "option_id": 1
         },
         {
             "id": 11,

@@ -87,26 +87,7 @@ func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
 		return fmt.Errorf("invalid sub")
 	}
 
-	interval := h.Utils.ReadStringQuery(c.QueryParams(), "interval", intervalMonth)
-
-	if slices.Index(intervals, interval) == -1 {
-		fmt.Println(interval, "interval")
-		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
-		return fmt.Errorf("invalid interval")
-	}
-	var intervalInt int
-
-	if interval == intervalWeek {
-		intervalInt = 7
-	} else if interval == intervalMonth {
-		intervalInt = 30
-	} else if interval == interval6Months {
-		intervalInt = 180
-	} else {
-		intervalInt = 365
-	}
-
-	frequency, err := h.Data.Posts.GetPostFrequency(sub, intervalInt)
+	frequency, err := h.Data.Posts.GetPostFrequency(sub)
 	if err != nil {
 		h.Utils.InternalServerError(c, err)
 		return fmt.Errorf("error getting post frequency %v", err)
@@ -118,7 +99,7 @@ func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
 		return fmt.Errorf("error structuring post frequency %v", err)
 	}
 
-	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_frequency", sub, interval): frequencyMap})
+	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_month_frequency", sub): frequencyMap})
 }
 
 func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
@@ -177,7 +158,7 @@ func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, Cake{"message": "No posts found"})
 	}
 
-	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_%s_posts", sub, category, interval): topPosts})
+	return c.JSON(http.StatusOK, Cake{"posts": topPosts})
 }
 
 func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
@@ -236,7 +217,7 @@ func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, Cake{"message": "No posts found"})
 	}
 
-	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_%s_users", sub, category, interval): topUsers})
+	return c.JSON(http.StatusOK, Cake{"users": topUsers})
 }
 
 func (h *Handlers) UpdatePostsFromReddit() error {

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	reddit_uid_test = "sqv1rf88"
+	reddit_uid_test = "eh2wrd0r"
 )
 
 func (h *Handlers) CreatePollHandler(c echo.Context) error {

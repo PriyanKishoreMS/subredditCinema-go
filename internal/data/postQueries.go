@@ -165,22 +165,21 @@ const (
 	`
 
 	FrequencyOfPostsQuery = `
-	select extract(
-        	hour
-        	from created_utc
-    	) as hour,
-    	extract(
-        	dow
-        	from created_utc
-    	) as day,
-    	count(*) as post_count
-	from subreddit_posts
-	where subreddit = $1
-    	and created_utc >= now() - make_interval(days := $2)
-	group by subreddit,
-    	hour,
-    	day
-	order by day asc;
+	with date_range as (
+    select 
+        date_trunc('week', CURRENT_DATE - INTERVAL '4 weeks')::date + make_interval(days := $2) AS start_date,
+        date_trunc('week', CURRENT_DATE)::date + make_interval(days := $2) AS end_date)
+		select extract(hour from created_utc) as hour, 
+    extract(dow from created_utc) as day, 
+    count(*) as post_count 
+	from subreddit_posts, date_range
+	where created_utc >= date_range.start_date
+    and created_utc < date_range.end_date
+    and subreddit = $1
+	group by 
+    hour, day 
+	order by 
+    day ASC, hour ASC;
 	`
 
 	GetAllTextsOfInterval = `

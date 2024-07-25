@@ -62,7 +62,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		atTime := gocron.NewAtTime(23, 45, 0)
+		atTime := gocron.NewAtTime(22, 48, 0)
 		atTimes := gocron.NewAtTimes(atTime)
 
 		updateRedditPostsJob, err := scheduler.NewJob(gocron.DailyJob(1, atTimes), gocron.NewTask(func() {

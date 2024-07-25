@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 	"sort"
@@ -220,4 +222,49 @@ func (h *Handlers) GetTrafficHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, Cake{"traffic": traffic})
+}
+
+// reddit api doesn't provide snoovatar data. This url of reddit.com/user/{username}/about.json provides snoovatar data
+// but it is inconsistent, doesn't provide proper data for most users, also the image is not png, so not using it.
+func (h *Handlers) GetRedditUsersSnoovatar(c echo.Context, topUsers []data.TopUsers) error {
+	for i, _ := range topUsers {
+		user := &topUsers[i]
+
+		httpClient := http.Client{}
+		url := fmt.Sprintf("https://www.reddit.com/user/%s/about.json", user.User)
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return err
+		}
+
+		if err != nil {
+			h.Utils.InternalServerError(c, err)
+			return err
+		}
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		var userData struct {
+			Data struct {
+				SnoovatarImg string `json:"snoovatar_img"`
+			}
+		}
+
+		err = json.Unmarshal(body, &userData)
+		if err != nil {
+			return err
+		}
+
+		user.Avatar = userData.Data.SnoovatarImg
+	}
+	return nil
 }

@@ -39,6 +39,7 @@ type PostsWrapper struct {
 type TopUsers struct {
 	User      string `json:"user"`
 	PostCount int    `json:"post_count"`
+	Avatar    string `json:"avatar,omitempty"`
 }
 
 type TopPosts struct {
@@ -86,13 +87,16 @@ func (p PostModel) GetTrendingWords(sub string, interval int) ([]string, error) 
 	return words, nil
 }
 
-func (p PostModel) GetPostFrequency(sub string, interval int) ([]PostFrequency, error) {
+func (p PostModel) GetPostFrequency(sub string) ([]PostFrequency, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
 	query := FrequencyOfPostsQuery
 
-	rows, err := p.DB.Query(ctx, query, sub, interval)
+	weekday := time.Now().Weekday()
+	weekdayInt := int(weekday) - 1
+
+	rows, err := p.DB.Query(ctx, query, sub, weekdayInt)
 	if err != nil {
 		return nil, fmt.Errorf("error in getting post frequency by day of week; %v", err)
 	}
