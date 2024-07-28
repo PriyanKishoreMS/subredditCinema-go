@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,6 +38,19 @@ func AuthenticateUserSession(h *handlers.Handlers) echo.MiddlewareFunc {
 			}
 
 			c.Set("reddit_id", reddit_id)
+			return next(c)
+		}
+	}
+}
+
+func CacheControlWordCloud() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if strings.HasPrefix(c.Request().URL.Path, "/public/wordcloud/") &&
+				strings.HasSuffix(c.Request().URL.Path, "_wordcloud.png") {
+				// Cache for 6 hours
+				c.Response().Header().Set("Cache-Control", "public, max-age=21600, must-revalidate")
+			}
 			return next(c)
 		}
 	}

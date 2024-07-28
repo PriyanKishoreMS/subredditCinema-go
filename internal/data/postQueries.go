@@ -55,6 +55,7 @@ const (
         	)
     	)
     	and created_utc > now() - make_interval(days := $2)
+		and author != '[deleted]'
 	group by author
 	order by author_count desc
 	limit 5
@@ -73,6 +74,7 @@ const (
         	)
     	)
     	and created_utc > now() - make_interval(days := $2)
+		and author != '[deleted]'
 	group by author
 	order by author_count desc
 	limit 5

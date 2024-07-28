@@ -6,3 +6,4 @@ graw.ini
 /dump/*.json
 /public
 /vendor
+*/py-venv

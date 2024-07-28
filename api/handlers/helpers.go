@@ -18,7 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors"}
+var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors", "youtube", "cinema", "release", "youtu", "instagram", "kinda", "share", "character", "characters", "video", "screen", "content", "version", "industry"}
 
 type WordCount struct {
 	Word  string
@@ -222,6 +222,48 @@ func (h *Handlers) GetTrafficHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, Cake{"traffic": traffic})
+}
+
+func (h *Handlers) GetTrendingWordsHandlerWeb(c echo.Context) error {
+	sub, err := h.Utils.ReadStringParam(c, "sub")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid sub %v", err)
+	}
+
+	if slices.Index(subReddits, sub) == -1 {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid sub"))
+		return fmt.Errorf("invalid sub")
+	}
+
+	interval := h.Utils.ReadStringQuery(c.QueryParams(), "interval", intervalMonth)
+
+	if slices.Index(intervals, interval) == -1 {
+		fmt.Println(interval, "interval")
+		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
+		return fmt.Errorf("invalid interval")
+	}
+	var intervalInt int
+
+	if interval == intervalWeek {
+		intervalInt = 7
+	} else {
+		intervalInt = 30
+	}
+
+	allWords, err := h.Data.Posts.GetTrendingWords(sub, intervalInt)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error getting trending words %v", err)
+	}
+
+	trendingWords, err := h.getMostUsedWords(allWords, 100)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return fmt.Errorf("error getting most used words %v", err)
+	}
+
+	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_trending_words", sub, interval): trendingWords})
 }
 
 // reddit api doesn't provide snoovatar data. This url of reddit.com/user/{username}/about.json provides snoovatar data

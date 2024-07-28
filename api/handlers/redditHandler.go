@@ -33,24 +33,14 @@ func (h *Handlers) VerifySession(c echo.Context) error {
 	return c.JSON(http.StatusOK, Cake{"message": "Session verified", "reddit_id": reddit_id})
 }
 
-func (h *Handlers) GetTrendingWordsHandler(c echo.Context) error {
-	sub, err := h.Utils.ReadStringParam(c, "sub")
-	if err != nil {
-		h.Utils.BadRequest(c, err)
-		return fmt.Errorf("invalid sub %v", err)
-	}
+func (h *Handlers) GetTrendingWordsHandler(sub string, interval string) ([]WordCount, error) {
 
 	if slices.Index(subReddits, sub) == -1 {
-		h.Utils.BadRequest(c, fmt.Errorf("invalid sub"))
-		return fmt.Errorf("invalid sub")
+		return nil, fmt.Errorf("invalid sub")
 	}
 
-	interval := h.Utils.ReadStringQuery(c.QueryParams(), "interval", intervalMonth)
-
 	if slices.Index(intervals, interval) == -1 {
-		fmt.Println(interval, "interval")
-		h.Utils.BadRequest(c, fmt.Errorf("invalid interval"))
-		return fmt.Errorf("invalid interval")
+		return nil, fmt.Errorf("invalid interval")
 	}
 	var intervalInt int
 
@@ -62,17 +52,15 @@ func (h *Handlers) GetTrendingWordsHandler(c echo.Context) error {
 
 	allWords, err := h.Data.Posts.GetTrendingWords(sub, intervalInt)
 	if err != nil {
-		h.Utils.InternalServerError(c, err)
-		return fmt.Errorf("error getting trending words %v", err)
+		return nil, fmt.Errorf("error getting trending words %v", err)
 	}
 
 	trendingWords, err := h.getMostUsedWords(allWords, 100)
 	if err != nil {
-		h.Utils.InternalServerError(c, err)
-		return fmt.Errorf("error getting most used words %v", err)
+		return nil, fmt.Errorf("error getting most used words %v", err)
 	}
 
-	return c.JSON(http.StatusOK, Cake{fmt.Sprintf("%s_%s_trending_words", sub, interval): trendingWords})
+	return trendingWords, nil
 }
 
 func (h *Handlers) GetPostFrequencyHandler(c echo.Context) error {
