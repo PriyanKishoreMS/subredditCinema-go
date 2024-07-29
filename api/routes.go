@@ -19,7 +19,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e.Use(IPRateLimit(h))
 	e.Use(ManageSession(h))
 	e.Use(middleware.RemoveTrailingSlash())
-	e.Use(CacheControlWordCloud())
+	// e.Use(CacheControlWordCloud())
 	e.Static("/public", "public")
 
 	e.HideBanner = true
@@ -42,7 +42,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		poll := api.Group("/poll")
 		{
-			poll.GET("/all", h.GetAllPollsHandler)
+			poll.GET("/:sub/all", h.GetAllPollsHandler)
 			poll.GET("/:poll_id", h.GetPollByIDHandler)
 			// todo Should Add Middleware to Authenticate User before deploying
 			poll.POST("/create", h.CreatePollHandler)
@@ -69,9 +69,9 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		updatePostsAtTime := gocron.NewAtTime(23, 45, 0)
+		updatePostsAtTime := gocron.NewAtTime(20, 24, 0)
 		updatePostsAtTimes := gocron.NewAtTimes(updatePostsAtTime)
-		updateWordCloudAtTime := gocron.NewAtTime(23, 55, 0)
+		updateWordCloudAtTime := gocron.NewAtTime(20, 32, 55)
 		updateWordCloudAtTimes := gocron.NewAtTimes(updateWordCloudAtTime)
 
 		updateRedditPostsJob, err := updateRedditPostsJob(*h, scheduler, updatePostsAtTimes)

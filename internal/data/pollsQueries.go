@@ -7,7 +7,7 @@ const (
 	`
 
 	GetAllPollsQuery = `
-	SELECT 
+		SELECT COUNT (*) OVER () AS total,
     	p.id, 
     	p.reddit_uid, 
     	p.subreddit, 
@@ -33,6 +33,10 @@ const (
     	) AS vote_counts
 	FROM polls p
 	JOIN users u ON p.reddit_uid = u.reddit_uid
+	WHERE p.subreddit = $1
+	ORDER BY p.start_time DESC  
+	LIMIT $2
+	OFFSET $3
 	`
 
 	GetPollByIDQuery = `

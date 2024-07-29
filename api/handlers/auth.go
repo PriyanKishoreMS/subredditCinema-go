@@ -54,5 +54,5 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 
 	h.SessionManager.Put(c.Request().Context(), "reddit_id", user.RedditUID)
 
-	return c.JSON(http.StatusOK, user)
+	return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:5173")
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	reddit_uid_test = "eh2wrd0r"
+	reddit_uid_test = "sqv1rf88"
 )
 
 func (h *Handlers) CreatePollHandler(c echo.Context) error {
@@ -77,7 +78,30 @@ func (h *Handlers) CreatePollHandler(c echo.Context) error {
 }
 
 func (h *Handlers) GetAllPollsHandler(c echo.Context) error {
-	polls, err := h.Data.Polls.GetAllPolls()
+	sub, err := h.Utils.ReadStringParam(c, "sub")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return fmt.Errorf("invalid sub %v", err)
+	}
+
+	if slices.Index(subReddits, sub) == -1 {
+		h.Utils.BadRequest(c, fmt.Errorf("invalid sub"))
+		return fmt.Errorf("invalid sub")
+	}
+
+	input := data.Filters{}
+
+	qs := c.Request().URL.Query()
+	input.Page = h.Utils.ReadIntQuery(qs, "page", 1)
+	input.PageSize = h.Utils.ReadIntQuery(qs, "page_size", 10)
+
+	err = h.Validate.Struct(input)
+	if err != nil {
+		h.Utils.ValidationError(c, err)
+		return err
+	}
+
+	polls, metadata, err := h.Data.Polls.GetAllPolls(sub, input)
 	if err != nil {
 		h.Utils.InternalServerError(c, fmt.Errorf("error in getting polls; %v", err))
 		return err
@@ -87,7 +111,7 @@ func (h *Handlers) GetAllPollsHandler(c echo.Context) error {
 		return nil
 	}
 
-	return c.JSON(http.StatusOK, polls)
+	return c.JSON(http.StatusOK, Cake{"polls": polls, "metadata": metadata})
 }
 
 func (h *Handlers) GetPollByIDHandler(c echo.Context) error {

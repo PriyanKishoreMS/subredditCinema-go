@@ -47,7 +47,7 @@ def makeImage(text, filename):
             width=600,
             height=400,
             color_func=get_color_func,
-            # font_path="/path/to/your/font.ttf",  # Replace with path to a custom font if desired
+            # font_path="/path/to/your/font.ttf",  
             prefer_horizontal=0.7,
             relative_scaling=0.5,
             margin=10,

@@ -18,7 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors", "youtube", "cinema", "release", "youtu", "instagram", "kinda", "share", "character", "characters", "video", "screen", "content", "version", "industry"}
+var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors", "youtube", "cinema", "release", "youtu", "instagram", "kinda", "share", "character", "characters", "video", "screen", "content", "version", "industry", "reddit"}
 
 type WordCount struct {
 	Word  string
@@ -90,7 +90,7 @@ func (h *Handlers) GetAuthUserDataFromReddit(c echo.Context, token *oauth2.Token
 
 func (h *Handlers) GetFromReddit(c echo.Context) error {
 
-	posts, _, err := h.Reddit.Subreddit.SearchPosts(c.Request().Context(), "Bujji in Chennai", "kollywood", &reddit.ListPostSearchOptions{
+	posts, _, err := h.Reddit.Subreddit.SearchPosts(c.Request().Context(), "Average Tamil Cinema", "kollywood", &reddit.ListPostSearchOptions{
 		ListPostOptions: reddit.ListPostOptions{
 			Time: "year",
 		},
@@ -100,7 +100,34 @@ func (h *Handlers) GetFromReddit(c echo.Context) error {
 		log.Error("Error getting posts from reddit", err)
 		return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
 	}
-	return c.JSON(200, posts)
+
+	index := 0
+
+	input := data.Post{
+		ID:                   posts[index].ID,
+		Name:                 posts[index].FullID,
+		CreatedUTC:           posts[index].Created.Time,
+		Permalink:            posts[index].Permalink,
+		Title:                posts[index].Title,
+		Category:             "top",
+		Selftext:             posts[index].Body,
+		Score:                posts[index].Score,
+		UpvoteRatio:          float64(posts[index].UpvoteRatio),
+		NumComments:          posts[index].NumberOfComments,
+		Subreddit:            posts[index].SubredditName,
+		SubredditID:          posts[index].SubredditID,
+		SubredditSubscribers: posts[index].SubredditSubscribers,
+		Author:               posts[index].Author,
+		AuthorFullname:       posts[index].AuthorID,
+	}
+
+	err = h.Data.Posts.InsertOnePost(input)
+	if err != nil {
+		log.Error("Error inserting post into db", err)
+		return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
+	}
+
+	return c.JSON(200, posts[0])
 }
 
 type PostFrequency struct {

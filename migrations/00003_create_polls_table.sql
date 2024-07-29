@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS polls (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (reddit_uid) REFERENCES users(reddit_uid)
 );
+
 CREATE INDEX IF NOT EXISTS idx_polls_reddit_uid ON polls(reddit_uid)
+CREATE INDEX IF NOT EXISTS idx_polls_subreddit ON polls(subreddit)
 -- +goose StatementEnd
 
 -- +goose Down

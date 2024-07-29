@@ -5,7 +5,7 @@ Content-Type: application/json
 
 {
     "subreddit": "kollywood",
-    "title" : "Who is the best heroine in Kollywood?",
+    "title" : "Who is the best comedian in Kollywood?",
     "options": [
         {
             "id": 1,
@@ -27,7 +27,7 @@ Content-Type: application/json
 }
 
 ###
-post {{host}}/api/poll/vote/5/2
+post {{host}}/api/poll/vote/11/1
 
 ###
 delete {{host}}/api/poll/delete/7

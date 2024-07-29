@@ -212,6 +212,20 @@ func (p PostModel) DumpJson(filename string) error {
 	return nil
 }
 
+func (p PostModel) InsertOnePost(post Post) error {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := InsertPostsQuery
+
+	_, err := p.DB.Exec(ctx, query, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
+	if err != nil {
+		return fmt.Errorf("error in inserting post: %v", err)
+	}
+
+	return nil
+}
+
 func (p PostModel) InsertDailyPosts(dailyPosts []Post) error {
 	ctx, cancel := Handlectx()
 	defer cancel()

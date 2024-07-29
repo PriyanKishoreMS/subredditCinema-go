@@ -265,6 +265,39 @@ func GetDailyTopPosts(h *Handlers) ([]data.Post, error) {
 		}
 	}
 
+	for _, sub := range subReddits {
+		posts, _, err := h.Reddit.Subreddit.TopPosts(context.Background(), sub, &reddit.ListPostOptions{
+			ListOptions: reddit.ListOptions{
+				Limit: 10,
+			},
+			Time: "week",
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, post := range posts {
+			allPosts = append(allPosts, data.Post{
+				ID:                   post.ID,
+				Name:                 post.FullID,
+				CreatedUTC:           post.Created.Time,
+				Permalink:            post.Permalink,
+				Title:                post.Title,
+				Category:             "top",
+				Selftext:             post.Body,
+				Score:                post.Score,
+				UpvoteRatio:          float64(post.UpvoteRatio),
+				NumComments:          post.NumberOfComments,
+				Subreddit:            post.SubredditName,
+				SubredditID:          post.SubredditID,
+				SubredditSubscribers: post.SubredditSubscribers,
+				Author:               post.Author,
+				AuthorFullname:       post.AuthorID,
+			})
+
+		}
+	}
+
 	return allPosts, nil
 }
 
@@ -277,6 +310,39 @@ func GetDailyControversialPosts(h *Handlers) ([]data.Post, error) {
 				Limit: 10,
 			},
 			Time: "day",
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, post := range posts {
+			allPosts = append(allPosts, data.Post{
+				ID:                   post.ID,
+				Name:                 post.FullID,
+				CreatedUTC:           post.Created.Time,
+				Permalink:            post.Permalink,
+				Title:                post.Title,
+				Category:             "controversial",
+				Selftext:             post.Body,
+				Score:                post.Score,
+				UpvoteRatio:          float64(post.UpvoteRatio),
+				NumComments:          post.NumberOfComments,
+				Subreddit:            post.SubredditName,
+				SubredditID:          post.SubredditID,
+				SubredditSubscribers: post.SubredditSubscribers,
+				Author:               post.Author,
+				AuthorFullname:       post.AuthorID,
+			})
+
+		}
+	}
+
+	for _, sub := range subReddits {
+		posts, _, err := h.Reddit.Subreddit.ControversialPosts(context.Background(), sub, &reddit.ListPostOptions{
+			ListOptions: reddit.ListOptions{
+				Limit: 10,
+			},
+			Time: "week",
 		})
 		if err != nil {
 			return nil, err

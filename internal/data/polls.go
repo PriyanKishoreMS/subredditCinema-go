@@ -73,29 +73,32 @@ func (p PollsModel) PollLimitForUser(redditUID string) (bool, error) {
 	return exists, nil
 }
 
-func (p PollsModel) GetAllPolls() ([]PollDataResponse, error) {
+func (p PollsModel) GetAllPolls(sub string, filters Filters) ([]PollDataResponse, Metadata, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
 	query := GetAllPollsQuery
 
-	rows, err := p.DB.Query(ctx, query)
+	rows, err := p.DB.Query(ctx, query, sub, filters.limit(), filters.offset())
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	defer rows.Close()
 
 	var polls []PollDataResponse
+	totalRecords := 0
 	for rows.Next() {
 		var poll PollDataResponse
-		err := rows.Scan(&poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.VotingMethod, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
+		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.VotingMethod, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		polls = append(polls, poll)
 	}
 
-	return polls, nil
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return polls, metadata, nil
 }
 
 func (p PollsModel) GetPollByID(pollID int) (*PollDataResponse, error) {
