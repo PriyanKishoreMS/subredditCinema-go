@@ -15,7 +15,10 @@ import (
 
 func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e := echo.New()
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowCredentials: true,
+	}))
 	e.Use(IPRateLimit(h))
 	e.Use(ManageSession(h))
 	e.Use(middleware.RemoveTrailingSlash())
@@ -42,7 +45,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		poll := api.Group("/poll")
 		{
-			poll.GET("/:sub/all", h.GetAllPollsHandler)
+			poll.GET("/:sub/all", h.GetAllPollsHandler, CheckAuthenticateUserSession(h))
 			poll.GET("/:poll_id", h.GetPollByIDHandler)
 			// todo Should Add Middleware to Authenticate User before deploying
 			poll.POST("/create", h.CreatePollHandler)
@@ -69,9 +72,9 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		updatePostsAtTime := gocron.NewAtTime(20, 24, 0)
+		updatePostsAtTime := gocron.NewAtTime(00, 00, 0)
 		updatePostsAtTimes := gocron.NewAtTimes(updatePostsAtTime)
-		updateWordCloudAtTime := gocron.NewAtTime(20, 32, 55)
+		updateWordCloudAtTime := gocron.NewAtTime(00, 00, 40)
 		updateWordCloudAtTimes := gocron.NewAtTimes(updateWordCloudAtTime)
 
 		updateRedditPostsJob, err := updateRedditPostsJob(*h, scheduler, updatePostsAtTimes)

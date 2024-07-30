@@ -42,6 +42,34 @@ func AuthenticateUserSession(h *handlers.Handlers) echo.MiddlewareFunc {
 	}
 }
 
+func CheckAuthenticateUserSession(h *handlers.Handlers) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ctx := c.Request().Context()
+
+			reddit_id := h.SessionManager.GetString(ctx, "reddit_id")
+			if reddit_id == "" {
+				c.Set("reddit_id", reddit_id)
+				return next(c)
+			}
+
+			exists, err := h.Data.Users.CheckUserExists(reddit_id)
+			if err != nil {
+				h.Utils.InternalServerError(c, err)
+				return err
+			}
+
+			if !exists {
+				h.Utils.UserUnAuthorizedResponse(c)
+				return errors.New("user not found")
+			}
+
+			c.Set("reddit_id", reddit_id)
+			return next(c)
+		}
+	}
+}
+
 // func CacheControlWordCloud() echo.MiddlewareFunc {
 // 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 // 		return func(c echo.Context) error {
@@ -99,8 +127,8 @@ func ManageSession(h *handlers.Handlers) echo.MiddlewareFunc {
 					}
 
 					c.SetCookie(responseCookie)
-					h.Utils.AddHeaderIfMissing(c.Response(), "Cache-Control", `no-cache="Set-Cookie"`)
-					h.Utils.AddHeaderIfMissing(c.Response(), "Vary", "Cookie")
+					c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+					c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
 				}
 			})
 

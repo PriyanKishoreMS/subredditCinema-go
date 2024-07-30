@@ -79,12 +79,12 @@ func main() {
 	sessionManager.Lifetime = 6 * time.Hour
 	sessionManager.IdleTimeout = 20 * time.Minute
 	sessionManager.Cookie.Name = "login-session"
-	// sessionManager.Cookie.Domain = "localhost:3000"
+	sessionManager.Cookie.Domain = "localhost"
 	sessionManager.Cookie.HttpOnly = true
 	// sessionManager.Cookie.Path = "/example/"
 	sessionManager.Cookie.Persist = true
-	sessionManager.Cookie.SameSite = http.SameSiteStrictMode
-	sessionManager.Cookie.Secure = true
+	sessionManager.Cookie.SameSite = http.SameSiteNoneMode
+	sessionManager.Cookie.Secure = false
 
 	log.Info("Reddit client initialized")
 

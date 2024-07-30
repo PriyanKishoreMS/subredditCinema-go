@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/priyankishorems/bollytics-go/utils"
 )
@@ -78,6 +79,11 @@ func (h *Handlers) CreatePollHandler(c echo.Context) error {
 }
 
 func (h *Handlers) GetAllPollsHandler(c echo.Context) error {
+	// todo Uncomment before deploying
+	// reddit_uid := c.Get("reddit_id").(string)
+	reddit_uid := reddit_uid_test
+	log.Info("reddit_uid: ", reddit_uid)
+
 	sub, err := h.Utils.ReadStringParam(c, "sub")
 	if err != nil {
 		h.Utils.BadRequest(c, err)
@@ -101,17 +107,32 @@ func (h *Handlers) GetAllPollsHandler(c echo.Context) error {
 		return err
 	}
 
-	polls, metadata, err := h.Data.Polls.GetAllPolls(sub, input)
+	if reddit_uid == "" {
+		polls, metadata, err := h.Data.Polls.GetAllPolls(sub, input)
+		if err != nil {
+			h.Utils.InternalServerError(c, fmt.Errorf("error in getting polls; %v", err))
+			return err
+		}
+		if len(polls) == 0 {
+			h.Utils.CustomErrorResponse(c, utils.Cake{"error": "no polls found"}, http.StatusNotFound, nil)
+			return nil
+		}
+
+		return c.JSON(http.StatusOK, Cake{"polls": polls, "metadata": metadata})
+	}
+
+	polls, metadata, err := h.Data.Polls.GetAllPollsSigned(reddit_uid, sub, input)
 	if err != nil {
 		h.Utils.InternalServerError(c, fmt.Errorf("error in getting polls; %v", err))
 		return err
 	}
-	if len(polls) == 0 {
-		h.Utils.CustomErrorResponse(c, utils.Cake{"error": "no polls found"}, http.StatusNotFound, nil)
-		return nil
-	}
+	// if len(polls) == 0 {
+	// 	h.Utils.CustomErrorResponse(c, utils.Cake{"error": "no polls found"}, http.StatusNotFound, nil)
+	// 	return nil
+	// }
 
 	return c.JSON(http.StatusOK, Cake{"polls": polls, "metadata": metadata})
+
 }
 
 func (h *Handlers) GetPollByIDHandler(c echo.Context) error {
@@ -148,9 +169,16 @@ func (h *Handlers) CreatePollVoteHandler(c echo.Context) error {
 		return err
 	}
 
-	if err := h.Data.Polls.CreatePollVote(pollID, reddit_uid, int(optionID)); err != nil {
+	rows, err := h.Data.Polls.CreatePollVote(pollID, reddit_uid, int(optionID))
+	if err != nil {
 		h.Utils.InternalServerError(c, fmt.Errorf("error in inserting poll vote; %v", err))
 		return err
+	}
+
+	if rows == 0 && err == nil {
+		TLerror := fmt.Errorf("update time limit Exceeded")
+		h.Utils.CustomErrorResponse(c, utils.Cake{"message": "you've exceeded time limit to make change"}, http.StatusAlreadyReported, TLerror)
+		return TLerror
 	}
 
 	return c.JSON(http.StatusCreated, Cake{"message": "vote created"})

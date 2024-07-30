@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/utils"
 	"golang.org/x/oauth2"
 )
@@ -53,6 +54,7 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 	}
 
 	h.SessionManager.Put(c.Request().Context(), "reddit_id", user.RedditUID)
+	log.Infof("Session set for user: %s", user.RedditUID)
 
 	return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:5173")
 }

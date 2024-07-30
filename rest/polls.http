@@ -5,7 +5,7 @@ Content-Type: application/json
 
 {
     "subreddit": "kollywood",
-    "title" : "Who is the best comedian in Kollywood?",
+    "title" : "Who is the best comedian in Kollywood?", 
     "options": [
         {
             "id": 1,
@@ -23,11 +23,12 @@ Content-Type: application/json
             "id": 4,
             "text": "Keerthy Suresh"
         }
-    ]
+    ],
+    "end_time": ""
 }
 
 ###
 post {{host}}/api/poll/vote/11/1
 
 ###
-delete {{host}}/api/poll/delete/7
+delete {{host}}/api/poll/delete/11

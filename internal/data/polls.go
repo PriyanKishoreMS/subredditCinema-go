@@ -42,6 +42,7 @@ type PollDataResponse struct {
 	UserAvatar   string          `json:"user_avatar"`
 	TotalVotes   int             `json:"total_votes"`
 	VoteCount    json.RawMessage `json:"vote_count"`
+	UserVote     *int            `json:"user_vote,omitempty"`
 }
 
 func (p PollsModel) InsertNewPoll(poll *Poll, options []PollOption) error {
@@ -101,6 +102,34 @@ func (p PollsModel) GetAllPolls(sub string, filters Filters) ([]PollDataResponse
 	return polls, metadata, nil
 }
 
+func (p PollsModel) GetAllPollsSigned(redditUID, sub string, filters Filters) ([]PollDataResponse, Metadata, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := GetAllPollsQuerySigned
+
+	rows, err := p.DB.Query(ctx, query, redditUID, sub, filters.limit(), filters.offset())
+	if err != nil {
+		return nil, Metadata{}, err
+	}
+	defer rows.Close()
+
+	var polls []PollDataResponse
+	totalRecords := 0
+	for rows.Next() {
+		var poll PollDataResponse
+		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.VotingMethod, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount, &poll.UserVote)
+		if err != nil {
+			return nil, Metadata{}, err
+		}
+		polls = append(polls, poll)
+	}
+
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return polls, metadata, nil
+}
+
 func (p PollsModel) GetPollByID(pollID int) (*PollDataResponse, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
@@ -116,18 +145,20 @@ func (p PollsModel) GetPollByID(pollID int) (*PollDataResponse, error) {
 	return &poll, nil
 }
 
-func (p PollsModel) CreatePollVote(pollID int, redditUID string, optionID int) error {
+func (p PollsModel) CreatePollVote(pollID int, redditUID string, optionID int) (int64, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
 	query := CreatePollVoteQuery
 
-	_, err := p.DB.Exec(ctx, query, pollID, redditUID, optionID)
+	row, err := p.DB.Exec(ctx, query, pollID, redditUID, optionID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	res := row.RowsAffected()
+
+	return res, nil
 }
 
 func (p PollsModel) DeletePollByCreator(pollID int, redditUID string) error {
