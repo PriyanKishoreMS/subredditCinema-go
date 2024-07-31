@@ -1,89 +1,88 @@
 @host = http://localhost:3000
 
-
+###
 post {{host}}/api/survey/create
 Content-Type: application/json
 
 {
-    "title" :"This is a another test survey",
-    "subreddit": "kollywood"
+    "title" :"This is another survey to test multiple option questions",
+    "subreddit": "kollywood",
+    "questions": [
+        {
+            "order": 1,
+            "text": "What is a movie that you would like to watch?",
+            "type": "single",
+            "options": [
+                {
+                    "order": 1,
+                    "text": "Dhruva Natchathiram"
+                },
+                {
+                    "order": 2,
+                    "text": "Master"
+                },
+                {
+                    "order": 3,
+                    "text": "Kaithi"
+                }
+            ]
+        },
+        {
+            "order": 3,
+            "text": "tell me about your favourite actor?",
+            "type": "text"
+
+        },
+        {
+            "order": 2,
+            "text": "Why do you think that the movie is good?",
+            "type": "multiple",
+            "options": [
+                {
+                    "order": 1, 
+                    "text": "Direction"
+                },
+                {
+                    "order": 2,
+                    "text": "Acting"
+                },
+                {
+                    "order": 3,
+                    "text": "Story"
+                },
+                {
+                    "order": 4,
+                    "text": "Music"
+                }
+            ]
+        }
+    ]
 }
 
+
+
+
 ###
-post {{host}}/api/survey/questions/4
+post {{host}}/api/survey/response/9
 Content-Type: application/json
 
 [
     {
-        "question_text": "What is your another favourite movie?",
-        "options": [
-            {
-                "id": 1,
-                "text": "Vada Chennai"
-            },
-            {
-                "id": 2,
-                "text": "Asuran"
-            },
-            {
-                "id": 3,
-                "text": "Kaithi"
-            }
-        ]
+        "question_id": 19,
+        "selected_option_id": 2
+    }, 
+    {
+        "question_id": 20,
+        "answer_text": "Vj na is still my favourite actor"
+    }, 
+    {
+        "question_id": 21,
+        "selected_option_id": 2
     },
     {
-        "question_text": "What is your another favourite actor?",
-        "options": [
-            {
-                "id": 1,
-                "text": "Dhanush"
-            },
-            {
-                "id": 2,
-                "text": "Vijay"
-            },
-            {
-                "id": 3,
-                "text": "Ajith"
-            }
-        ]
-    },
-    {
-        "question_text": "What is your another favourite actress?",
-        "options": [
-            {
-                "id": 1,
-                "text": "Nayanthara"
-            },
-            {
-                "id": 2,
-                "text": "Trisha"
-            },
-            {
-                "id": 3,
-                "text": "Samantha"
-            }
-        ]
+        "question_id": 21,
+        "selected_option_id": 3
     }
 ]
 
-###
-post {{host}}/api/survey/response/4
-Content-Type: application/json
 
-{
-    "response_data": [
-        {
-            "id": 10,
-            "option_id": 1
-        },
-        {
-            "id": 11,
-            "option_id": 1
-        },
-        {
-            "id": 12,
-            "option_id": 3
-        }
-    ]
-}

@@ -35,12 +35,10 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	{
 		survey := api.Group("/survey")
 		{
-			survey.GET("/:survey_id", h.GetSurveyByIDHandler)
-			// todo Should Add Middleware to Authenticate User before deploying
-			survey.GET(("/response/:survey_id"), h.GetSurveyResponsesByIDHandler)
 			survey.POST("/create", h.CreateSurveyHandler)
-			survey.POST("/questions/:survey_id", h.CreateSurveyQuestionsHandler)
-			survey.POST("/response/:survey_id", h.CreateSurveyResponseHandler)
+			survey.POST("/response/:survey_id", h.CreateSurveyResponsesHandler)
+			survey.GET("/:survey_id", h.GetSurveyByIDHandler)
+			survey.GET("/all", h.GetAllSurveysHandler)
 		}
 
 		poll := api.Group("/poll")
@@ -72,9 +70,9 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		updatePostsAtTime := gocron.NewAtTime(00, 00, 0)
+		updatePostsAtTime := gocron.NewAtTime(23, 40, 0)
 		updatePostsAtTimes := gocron.NewAtTimes(updatePostsAtTime)
-		updateWordCloudAtTime := gocron.NewAtTime(00, 00, 40)
+		updateWordCloudAtTime := gocron.NewAtTime(23, 42, 40)
 		updateWordCloudAtTimes := gocron.NewAtTimes(updateWordCloudAtTime)
 
 		updateRedditPostsJob, err := updateRedditPostsJob(*h, scheduler, updatePostsAtTimes)

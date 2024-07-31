@@ -2,95 +2,109 @@ package data
 
 const (
 	CreateSurveyQuery = `
-	INSERT INTO surveys (reddit_uid, subreddit, title, description, end_time)
-	VALUES ($1, $2, $3, $4, $5)
-	RETURNING id
+	INSERT INTO surveys (reddit_uid, subreddit, title, description, start_time, end_time)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	RETURNING id;
 	`
 
 	CreateSurveyQuestionQuery = `
-	INSERT INTO survey_questions (survey_id, question_order, question_text, question_type, options, is_required)
-	VALUES ($1, $2, $3, $4, $5, $6) 
+	INSERT INTO survey_questions (survey_id, question_order, question_text, question_type, is_required)
+	VALUES ($1, $2, $3, $4, $5)
+	RETURNING id;
 	`
 
-	CreateSurveyResponseQuery = `
-	INSERT INTO survey_responses (survey_id, reddit_uid, response_data) VALUES ($1, $2, $3)
+	CreateSurveyOptionQuery = `
+	INSERT INTO survey_options (question_id, option_order, option_text)
+	VALUES ($1, $2, $3);
 	`
 
-	GetSurveyOwnerQuery = `
-	SELECT EXISTS(SELECT 1 FROM surveys WHERE reddit_uid = $1 AND id = $2)	
+	CreateResponseQuery = `
+	INSERT INTO survey_responses (survey_id, reddit_uid)
+	VALUES ($1, $2)
+	RETURNING id;
+	`
+
+	CreateAnswerQuery = `
+	INSERT INTO survey_answers (response_id, question_id, answer_text, selected_option_id)
+	VALUES ($1, $2, $3, $4);
+	`
+
+	GetQuestionTypeQuery = `
+	SELECT id, question_type FROM survey_questions WHERE survey_id = $1
+	`
+
+	GetAllSurveyDetailsQuery = `
+	SELECT 
+    	COUNT(*) OVER () AS total,
+    	s.id,
+    	s.subreddit,
+    	s.title,
+    	s.description,
+    	s.start_time,
+    	s.end_time,
+    	s.is_result_public,
+    	u.username,
+    	u.avatar,
+    	COALESCE(sr.response_count, 0) AS total_responses
+	FROM
+    	surveys s
+	INNER JOIN
+    	users u ON s.reddit_uid = u.reddit_uid
+	LEFT JOIN
+    	(SELECT survey_id, COUNT(*) AS response_count 
+     	FROM survey_responses 
+     	GROUP BY survey_id) sr ON sr.survey_id = s.id
+	ORDER BY
+    	s.id
+	LIMIT $1
+	OFFSET $2
+	`
+
+	GetSurveyDetailsQuery = `
+	SELECT 
+    s.id,
+    s.subreddit,
+    s.title,
+    s.description,
+    s.start_time,
+    s.end_time,
+    s.is_result_public,
+    u.username,
+    u.avatar
+	FROM 
+    	surveys s
+	inner join users u on s.reddit_uid = u.reddit_uid
+	where s.id = $1;
 	`
 
 	GetSurveyQuestionsQuery = `
 	SELECT 
-    s.id AS survey_id, 
-    s.reddit_uid, 
-    s.subreddit, 
-    s.title, 
-    s.description, 
-    s.start_time, 
-    s.end_time, 
-    s.is_active,
-    json_agg(
-        json_build_object(
-            'id', sq.id,
-            'question_order', sq.question_order,
-            'question_text', sq.question_text,
-            'question_type', sq.question_type,
-            'options', sq.options,
-            'is_required', sq.is_required
-        ) ORDER BY sq.question_order
-    ) AS questions
+    	id AS question_id,
+    	question_order,
+    	question_text,
+    	question_type,
+    	is_required
 	FROM 
-    	surveys s
-	LEFT JOIN 
-    	survey_questions sq ON s.id = sq.survey_id
+    	survey_questions
 	WHERE 
-    	s.id = $1
-	GROUP BY 
-    	s.id
+    	survey_id = $1
+	ORDER BY 
+    	question_order;
 	`
 
-	GetSurveyResponseDataQuery = `
-	WITH response_counts AS (
-    SELECT 
-        survey_id,
-        (jsonb_array_elements(response_data)->>'id')::int AS question_id,
-        (jsonb_array_elements(response_data)->>'option_id')::int AS option_id
-    FROM 
-        survey_responses
-    WHERE 
-        survey_id = $1
-	),
-	all_options AS (
-    	SELECT 
-        	id AS question_id,
-        	(jsonb_array_elements(options)->>'id')::int AS option_id
-    	FROM 
-        	survey_questions
-    	WHERE 
-        	survey_id = $1
-	),
-	option_counts AS (
-    	SELECT 
-        	ao.question_id,
-        	ao.option_id,
-        	COUNT(rc.option_id) AS count
-    	FROM 
-        	all_options ao
-    	LEFT JOIN 
-        	response_counts rc ON ao.question_id = rc.question_id AND ao.option_id = rc.option_id
-    	GROUP BY 
-        	ao.question_id, ao.option_id
-	)
+	GetSurveyOptionsQuery = `
 	SELECT 
-    	question_id,
-    	jsonb_object_agg(option_id, count ORDER BY option_id) AS option_counts,
-    	SUM(count) AS total_question_responses
+    so.id AS option_id,
+    so.question_id,
+    so.option_order,
+    so.option_text
 	FROM 
-    	option_counts
-	GROUP BY 
-    	question_id
+    	survey_options so
+	JOIN 
+    	survey_questions sq ON so.question_id = sq.id
+	WHERE 
+    	sq.survey_id = $1
 	ORDER BY 
-    	question_id;
+    	sq.question_order, so.option_order;
 	`
 )

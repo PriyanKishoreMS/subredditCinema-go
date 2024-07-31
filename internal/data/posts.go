@@ -226,13 +226,14 @@ func (p PostModel) InsertOnePost(post Post) error {
 	return nil
 }
 
-func (p PostModel) InsertDailyPosts(dailyPosts []Post) error {
+func (p PostModel) InsertDailyPosts(dailyPosts []Post) (err error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
 	tx, err := p.DB.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("error in starting transaction; %v", err)
+		err = fmt.Errorf("error in starting transaction; %v", err)
+		return
 	}
 
 	defer func() {
@@ -249,9 +250,10 @@ func (p PostModel) InsertDailyPosts(dailyPosts []Post) error {
 	query := InsertPostsQuery
 
 	for _, post := range dailyPosts {
-		_, err := tx.Exec(ctx, query, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
+		_, err = tx.Exec(ctx, query, post.ID, post.Name, post.CreatedUTC, post.Permalink, post.Title, post.Category, post.Selftext, post.Score, post.UpvoteRatio, post.NumComments, post.Subreddit, post.SubredditID, post.SubredditSubscribers, post.Author, post.AuthorFullname)
 		if err != nil {
-			return fmt.Errorf("error in inserting post: %v", err)
+			err = fmt.Errorf("error in inserting post: %v", err)
+			return
 		}
 	}
 
@@ -259,7 +261,8 @@ func (p PostModel) InsertDailyPosts(dailyPosts []Post) error {
 
 	deleted, err := tx.Exec(ctx, query)
 	if err != nil {
-		return fmt.Errorf("error in deleting old posts: %v", err)
+		err = fmt.Errorf("error in deleting old posts: %v", err)
+		return
 	}
 
 	fmt.Println("Deleted old posts: ", deleted.RowsAffected())
