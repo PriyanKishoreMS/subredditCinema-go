@@ -26,6 +26,8 @@ var (
 	RedditIdWeb        string = os.Getenv("REDDIT_API_ID_WEB")
 	RedditSecretWeb    string = os.Getenv("REDDIT_API_SECRET_WEB")
 	RedditUserAgentWeb string = os.Getenv("REDDIT_USER_AGENT_WEB")
+	JWTSecret          string = os.Getenv("JWT_SECRET")
+	JWTIssuer          string = os.Getenv("JWT_ISSUER")
 )
 
 var (
@@ -59,8 +61,12 @@ var HttpClientConfig = &http.Client{
 }
 
 type Config struct {
-	Port        int
-	Env         string
+	Port int
+	Env  string
+	JWT  struct {
+		Secret string
+		Issuer string
+	}
 	RateLimiter struct {
 		Rps     int
 		Burst   int

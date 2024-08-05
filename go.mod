@@ -5,7 +5,6 @@ go 1.22.0
 toolchain go1.22.5
 
 require (
-	github.com/alexedwards/scs/v2 v2.8.0
 	github.com/cyruzin/golang-tmdb v1.6.4
 	github.com/go-co-op/gocron/v2 v2.10.0
 	github.com/go-playground/validator/v10 v10.22.0
@@ -13,6 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
+	github.com/pascaldekloe/jwt v1.12.0
 	github.com/toadharvard/stopwords-iso v0.1.5
 	github.com/turnage/graw v0.0.0-20201204201853-a177df1b5c91
 	github.com/vartanbeno/go-reddit/v2 v2.0.1
@@ -21,7 +21,6 @@ require (
 )
 
 require (
-	github.com/dghubble/sling v1.4.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect

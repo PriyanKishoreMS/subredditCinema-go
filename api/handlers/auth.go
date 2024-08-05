@@ -3,11 +3,14 @@ package handlers
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"github.com/pascaldekloe/jwt"
+	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/priyankishorems/bollytics-go/utils"
 	"golang.org/x/oauth2"
 )
@@ -15,6 +18,10 @@ import (
 type AuthResponse struct {
 	Username string `json:"username"`
 }
+
+var (
+	ErrUserUnauthorized = echo.NewHTTPError(http.StatusUnauthorized, "user unauthorized")
+)
 
 func generateRandomState() string {
 	b := make([]byte, 16)
@@ -53,8 +60,80 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 		return err
 	}
 
-	h.SessionManager.Put(c.Request().Context(), "reddit_id", user.RedditUID)
-	log.Infof("Session set for user: %s", user.RedditUID)
+	accessToken, RefreshToken, err := data.GenerateAuthTokens(userdata.RedditID, h.Config.JWT.Secret, h.Config.JWT.Issuer)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
 
-	return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:5173")
+	data := Cake{
+		"accessToken":  string(accessToken),
+		"refreshToken": string(RefreshToken),
+		"user":         user,
+	}
+
+	tokensJSON, err := json.Marshal(data)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	html := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>Reddit Auth</title>
+		</head>
+		<body>
+			<script>
+				window.opener.postMessage({
+				type: 'AUTH_SUCCESS',
+				tokens: ` + string(tokensJSON) + `
+				}, 'http://localhost:5173');
+				window.close();
+			</script>
+		</body>
+		</html>
+	`
+
+	c.Response().Header().Set("Content-Type", "text/html")
+	return c.String(http.StatusOK, html)
+}
+
+func (h *Handlers) RefreshTokenHandler(c echo.Context) error {
+
+	c.Response().Writer.Header().Add("Vary", "Authorization")
+
+	authorizationHeader := c.Request().Header.Get("Authorization")
+	if authorizationHeader == "" {
+		h.Utils.UserUnAuthorizedResponse(c)
+		return ErrUserUnauthorized
+	}
+
+	headerParts := strings.Split(authorizationHeader, " ")
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		h.Utils.UserUnAuthorizedResponse(c)
+		return ErrUserUnauthorized
+	}
+
+	token := headerParts[1]
+
+	claims, err := jwt.HMACCheck([]byte(token), []byte(h.Config.JWT.Secret))
+	if err != nil {
+		h.Utils.UserUnAuthorizedResponse(c)
+		return ErrUserUnauthorized
+	}
+
+	id := claims.Subject
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	accessToken, err := data.GenerateAccessToken(id, []byte(h.Config.JWT.Secret), h.Config.JWT.Issuer)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+	return c.JSON(200, Cake{"access_token": string(accessToken)})
 }

@@ -12,14 +12,14 @@ type SurveysModel struct {
 }
 
 type Survey struct {
-	SurveyID       int        `json:"survey_id"`
+	SurveyID       int        `json:"id"`
 	Username       string     `json:"username"`
 	Avatar         string     `json:"avatar"`
 	RedditUID      string     `json:"reddit_uid,omitempty"`
 	Subreddit      string     `json:"subreddit" validate:"required"`
 	Title          string     `json:"title" validate:"required"`
 	Description    string     `json:"description"`
-	StartTime      time.Time  `json:"start_time" validate:"required"`
+	CreatedAt      time.Time  `json:"created_at"`
 	EndTime        time.Time  `json:"end_time" validate:"required"`
 	IsResultPublic bool       `json:"is_result_public"`
 	TotalResponses int        `json:"total_responses"`
@@ -71,7 +71,7 @@ func (s SurveysModel) CreateSurvey(survey *Survey) (err error) {
 	query := CreateSurveyQuery
 	var surveyID int
 
-	err = tx.QueryRow(ctx, query, survey.RedditUID, survey.Subreddit, survey.Title, survey.Description, survey.StartTime, survey.EndTime).Scan(&surveyID)
+	err = tx.QueryRow(ctx, query, survey.RedditUID, survey.Subreddit, survey.Title, survey.Description, survey.EndTime).Scan(&surveyID)
 	if err != nil {
 		return
 	}
@@ -81,6 +81,13 @@ func (s SurveysModel) CreateSurvey(survey *Survey) (err error) {
 		err = tx.QueryRow(ctx, CreateSurveyQuestionQuery, surveyID, q.Order, q.Text, q.Type, q.IsRequired).Scan(&quesionID)
 		if err != nil {
 			return
+		}
+
+		if q.Type == "single" || q.Type == "multiple" {
+			if len(q.Options) == 0 {
+				err = fmt.Errorf("options required for question %d", q.Order)
+				return
+			}
 		}
 
 		for _, o := range q.Options {
@@ -184,7 +191,7 @@ func (s SurveysModel) GetSurveyByID(surveyID int) (*Survey, error) {
 
 	survey := new(Survey)
 
-	if err := s.DB.QueryRow(ctx, GetSurveyDetailsQuery, surveyID).Scan(&survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.StartTime, &survey.EndTime, &survey.IsResultPublic, &survey.Username, &survey.Avatar); err != nil {
+	if err := s.DB.QueryRow(ctx, GetSurveyDetailsQuery, surveyID).Scan(&survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.EndTime, &survey.IsResultPublic, &survey.Username, &survey.Avatar); err != nil {
 		return nil, err
 	}
 
@@ -243,7 +250,7 @@ func (s SurveysModel) GetAllSurveys(filters Filters) ([]Survey, Metadata, error)
 	totalRecords := 0
 	for rows.Next() {
 		survey := new(Survey)
-		if err := rows.Scan(&totalRecords, &survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.StartTime, &survey.EndTime, &survey.IsResultPublic, &survey.Username, &survey.Avatar, &survey.TotalResponses); err != nil {
+		if err := rows.Scan(&totalRecords, &survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.EndTime, &survey.IsResultPublic, &survey.CreatedAt, &survey.Username, &survey.Avatar, &survey.TotalResponses); err != nil {
 			return nil, Metadata{}, err
 		}
 		surveys = append(surveys, *survey)

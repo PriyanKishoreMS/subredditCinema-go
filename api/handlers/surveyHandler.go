@@ -16,10 +16,6 @@ func (h *Handlers) CreateSurveyHandler(c echo.Context) error {
 
 	survey.RedditUID = reddit_uid
 
-	if survey.StartTime.IsZero() {
-		survey.StartTime = time.Now()
-	}
-
 	if survey.EndTime.IsZero() {
 		survey.EndTime = time.Now().Add(time.Hour * 24)
 	}

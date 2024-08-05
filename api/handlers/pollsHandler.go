@@ -8,13 +8,12 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/priyankishorems/bollytics-go/utils"
 )
 
 const (
-	reddit_uid_test = "eh2wrd0r"
+	reddit_uid_test = "sqv1rf88"
 )
 
 func (h *Handlers) CreatePollHandler(c echo.Context) error {
@@ -82,7 +81,6 @@ func (h *Handlers) GetAllPollsHandler(c echo.Context) error {
 	// todo Uncomment before deploying
 	// reddit_uid := c.Get("reddit_id").(string)
 	reddit_uid := reddit_uid_test
-	log.Info("reddit_uid: ", reddit_uid)
 
 	sub, err := h.Utils.ReadStringParam(c, "sub")
 	if err != nil {

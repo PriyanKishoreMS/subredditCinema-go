@@ -51,6 +51,11 @@ func (p PollsModel) InsertNewPoll(poll *Poll, options []PollOption) error {
 
 	query := CreatePollsQuery
 
+	for i := range options {
+		option := &options[i]
+		option.ID = i + 1
+	}
+
 	_, err := p.DB.Exec(ctx, query, poll.RedditUID, poll.Subreddit, poll.Title, poll.Description, options, poll.VotingMethod, poll.EndTime)
 	if err != nil {
 		return err

@@ -232,71 +232,24 @@ func (h *Handlers) UpdatePostsFromReddit() error {
 func GetDailyTopPosts(h *Handlers) ([]data.Post, error) {
 	var allPosts []data.Post
 
-	for _, sub := range subReddits {
-		posts, _, err := h.Reddit.Subreddit.TopPosts(context.Background(), sub, &reddit.ListPostOptions{
-			ListOptions: reddit.ListOptions{
-				Limit: 10,
-			},
-			Time: "day",
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		for _, post := range posts {
-			allPosts = append(allPosts, data.Post{
-				ID:                   post.ID,
-				Name:                 post.FullID,
-				CreatedUTC:           post.Created.Time,
-				Permalink:            post.Permalink,
-				Title:                post.Title,
-				Category:             "top",
-				Selftext:             post.Body,
-				Score:                post.Score,
-				UpvoteRatio:          float64(post.UpvoteRatio),
-				NumComments:          post.NumberOfComments,
-				Subreddit:            post.SubredditName,
-				SubredditID:          post.SubredditID,
-				SubredditSubscribers: post.SubredditSubscribers,
-				Author:               post.Author,
-				AuthorFullname:       post.AuthorID,
-			})
-
-		}
+	dayPosts, err := getTopFromReddit(h.Reddit, 10, "day", allPosts)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, sub := range subReddits {
-		posts, _, err := h.Reddit.Subreddit.TopPosts(context.Background(), sub, &reddit.ListPostOptions{
-			ListOptions: reddit.ListOptions{
-				Limit: 10,
-			},
-			Time: "week",
-		})
-		if err != nil {
-			return nil, err
-		}
+	allPosts = append(allPosts, dayPosts...)
 
-		for _, post := range posts {
-			allPosts = append(allPosts, data.Post{
-				ID:                   post.ID,
-				Name:                 post.FullID,
-				CreatedUTC:           post.Created.Time,
-				Permalink:            post.Permalink,
-				Title:                post.Title,
-				Category:             "top",
-				Selftext:             post.Body,
-				Score:                post.Score,
-				UpvoteRatio:          float64(post.UpvoteRatio),
-				NumComments:          post.NumberOfComments,
-				Subreddit:            post.SubredditName,
-				SubredditID:          post.SubredditID,
-				SubredditSubscribers: post.SubredditSubscribers,
-				Author:               post.Author,
-				AuthorFullname:       post.AuthorID,
-			})
-
-		}
+	weekPosts, err := getTopFromReddit(h.Reddit, 10, "week", allPosts)
+	if err != nil {
+		return nil, err
 	}
+	allPosts = append(allPosts, weekPosts...)
+
+	monthPosts, err := getTopFromReddit(h.Reddit, 5, "month", allPosts)
+	if err != nil {
+		return nil, err
+	}
+	allPosts = append(allPosts, monthPosts...)
 
 	return allPosts, nil
 }
@@ -304,12 +257,35 @@ func GetDailyTopPosts(h *Handlers) ([]data.Post, error) {
 func GetDailyControversialPosts(h *Handlers) ([]data.Post, error) {
 	var allPosts []data.Post
 
+	dayPosts, err := getControversialFromReddit(h.Reddit, 10, "day", allPosts)
+	if err != nil {
+		return nil, err
+	}
+	allPosts = append(allPosts, dayPosts...)
+
+	weekPosts, err := getControversialFromReddit(h.Reddit, 5, "week", allPosts)
+	if err != nil {
+		return nil, err
+	}
+
+	allPosts = append(allPosts, weekPosts...)
+
+	monthPosts, err := getControversialFromReddit(h.Reddit, 5, "month", allPosts)
+	if err != nil {
+		return nil, err
+	}
+	allPosts = append(allPosts, monthPosts...)
+
+	return allPosts, nil
+}
+
+func getTopFromReddit(Reddit *reddit.Client, limit int, interval string, allPosts []data.Post) ([]data.Post, error) {
 	for _, sub := range subReddits {
-		posts, _, err := h.Reddit.Subreddit.ControversialPosts(context.Background(), sub, &reddit.ListPostOptions{
+		posts, _, err := Reddit.Subreddit.TopPosts(context.Background(), sub, &reddit.ListPostOptions{
 			ListOptions: reddit.ListOptions{
-				Limit: 10,
+				Limit: limit,
 			},
-			Time: "day",
+			Time: interval,
 		})
 		if err != nil {
 			return nil, err
@@ -322,7 +298,7 @@ func GetDailyControversialPosts(h *Handlers) ([]data.Post, error) {
 				CreatedUTC:           post.Created.Time,
 				Permalink:            post.Permalink,
 				Title:                post.Title,
-				Category:             "controversial",
+				Category:             categoryTop,
 				Selftext:             post.Body,
 				Score:                post.Score,
 				UpvoteRatio:          float64(post.UpvoteRatio),
@@ -336,13 +312,16 @@ func GetDailyControversialPosts(h *Handlers) ([]data.Post, error) {
 
 		}
 	}
+	return allPosts, nil
+}
 
+func getControversialFromReddit(Reddit *reddit.Client, limit int, interval string, allPosts []data.Post) ([]data.Post, error) {
 	for _, sub := range subReddits {
-		posts, _, err := h.Reddit.Subreddit.ControversialPosts(context.Background(), sub, &reddit.ListPostOptions{
+		posts, _, err := Reddit.Subreddit.ControversialPosts(context.Background(), sub, &reddit.ListPostOptions{
 			ListOptions: reddit.ListOptions{
-				Limit: 10,
+				Limit: limit,
 			},
-			Time: "week",
+			Time: interval,
 		})
 		if err != nil {
 			return nil, err
@@ -355,7 +334,7 @@ func GetDailyControversialPosts(h *Handlers) ([]data.Post, error) {
 				CreatedUTC:           post.Created.Time,
 				Permalink:            post.Permalink,
 				Title:                post.Title,
-				Category:             "controversial",
+				Category:             categoryControversial,
 				Selftext:             post.Body,
 				Score:                post.Score,
 				UpvoteRatio:          float64(post.UpvoteRatio),
@@ -369,6 +348,5 @@ func GetDailyControversialPosts(h *Handlers) ([]data.Post, error) {
 
 		}
 	}
-
 	return allPosts, nil
 }

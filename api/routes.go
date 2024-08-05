@@ -20,7 +20,6 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		AllowCredentials: true,
 	}))
 	e.Use(IPRateLimit(h))
-	e.Use(ManageSession(h))
 	e.Use(middleware.RemoveTrailingSlash())
 	// e.Use(CacheControlWordCloud())
 	e.Static("/public", "public")
@@ -29,7 +28,8 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e.GET("/", h.HomeFunc)
 	e.GET("/login", h.LoginHandler)
 	e.GET("/callback", h.CallbackHandler)
-	e.GET("/verify", h.VerifySession, AuthenticateUserSession(h))
+	e.GET("/verify", h.VerifySession)
+	e.GET("/refresh", h.RefreshTokenHandler)
 
 	api := e.Group("/api")
 	{
@@ -43,7 +43,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		poll := api.Group("/poll")
 		{
-			poll.GET("/:sub/all", h.GetAllPollsHandler, CheckAuthenticateUserSession(h))
+			poll.GET("/:sub/all", h.GetAllPollsHandler)
 			poll.GET("/:poll_id", h.GetPollByIDHandler)
 			// todo Should Add Middleware to Authenticate User before deploying
 			poll.POST("/create", h.CreatePollHandler)
@@ -70,9 +70,9 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		updatePostsAtTime := gocron.NewAtTime(23, 40, 0)
+		updatePostsAtTime := gocron.NewAtTime(23, 40, 00)
 		updatePostsAtTimes := gocron.NewAtTimes(updatePostsAtTime)
-		updateWordCloudAtTime := gocron.NewAtTime(23, 42, 40)
+		updateWordCloudAtTime := gocron.NewAtTime(23, 42, 00)
 		updateWordCloudAtTimes := gocron.NewAtTimes(updateWordCloudAtTime)
 
 		updateRedditPostsJob, err := updateRedditPostsJob(*h, scheduler, updatePostsAtTimes)

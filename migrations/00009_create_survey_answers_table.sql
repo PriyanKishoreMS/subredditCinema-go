@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS survey_answers (
     answer_text TEXT,
     selected_option_id INT,
     FOREIGN KEY (response_id) REFERENCES survey_responses(id) ON DELETE CASCADE,
-    FOREIGN KEY (question_id) REFERENCES survey_questions(id),
+    FOREIGN KEY (question_id) REFERENCES survey_questions(id) ON DELETE CASCADE,
     FOREIGN KEY (selected_option_id) REFERENCES survey_options(id)
 );
 CREATE INDEX IF NOT EXISTS idx_survey_answers_response_id ON survey_answers(response_id);

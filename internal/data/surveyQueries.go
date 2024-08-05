@@ -2,8 +2,8 @@ package data
 
 const (
 	CreateSurveyQuery = `
-	INSERT INTO surveys (reddit_uid, subreddit, title, description, start_time, end_time)
-	VALUES ($1, $2, $3, $4, $5, $6)
+	INSERT INTO surveys (reddit_uid, subreddit, title, description, end_time)
+	VALUES ($1, $2, $3, $4, $5)
 	RETURNING id;
 	`
 
@@ -40,9 +40,9 @@ const (
     	s.subreddit,
     	s.title,
     	s.description,
-    	s.start_time,
     	s.end_time,
     	s.is_result_public,
+		s.created_at,
     	u.username,
     	u.avatar,
     	COALESCE(sr.response_count, 0) AS total_responses
@@ -55,7 +55,7 @@ const (
      	FROM survey_responses 
      	GROUP BY survey_id) sr ON sr.survey_id = s.id
 	ORDER BY
-    	s.id
+    	s.created_at DESC
 	LIMIT $1
 	OFFSET $2
 	`
@@ -66,7 +66,6 @@ const (
     s.subreddit,
     s.title,
     s.description,
-    s.start_time,
     s.end_time,
     s.is_result_public,
     u.username,

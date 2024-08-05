@@ -3,10 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/alexedwards/scs/v2"
 	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/gommon/log"
@@ -26,9 +24,11 @@ func main() {
 	flag.IntVar(&cfg.Port, "port", 3000, "Server port")
 	flag.StringVar(&cfg.Env, "env", "development", "Server port")
 
-	flag.IntVar(&cfg.RateLimiter.Rps, "limiter-rps", 10, "Rate limiter max requests per second")
-	flag.IntVar(&cfg.RateLimiter.Burst, "limiter-burst", 10, "Rate limiter max burst")
-	flag.BoolVar(&cfg.RateLimiter.Enabled, "limiter-enabled", true, "Rate limiter enabled")
+	flag.IntVar(&cfg.RateLimiter.Rps, "limiter-rps", 50, "Rate limiter max requests per second")
+	flag.IntVar(&cfg.RateLimiter.Burst, "limiter-burst", 50, "Rate limiter max burst")
+	flag.StringVar(&cfg.JWT.Secret, "jwt-secret", utils.JWTSecret, "JWT secret")
+	flag.StringVar(&cfg.JWT.Issuer, "jwt-issuer", utils.JWTIssuer, "JWT issuer")
+	flag.BoolVar(&cfg.RateLimiter.Enabled, "limiter-enabled", false, "Rate limiter enabled")
 
 	flag.Parse()
 	log.SetHeader("${time_rfc3339} ${level}")
@@ -75,17 +75,6 @@ func main() {
 		log.Fatalf("error in initializing stopwords; %v", err)
 	}
 
-	sessionManager := scs.New()
-	sessionManager.Lifetime = 6 * time.Hour
-	sessionManager.IdleTimeout = 20 * time.Minute
-	sessionManager.Cookie.Name = "login-session"
-	sessionManager.Cookie.Domain = "localhost"
-	sessionManager.Cookie.HttpOnly = true
-	// sessionManager.Cookie.Path = "/example/"
-	sessionManager.Cookie.Persist = true
-	sessionManager.Cookie.SameSite = http.SameSiteNoneMode
-	sessionManager.Cookie.Secure = false
-
 	log.Info("Reddit client initialized")
 
 	h := &handlers.Handlers{
@@ -95,9 +84,8 @@ func main() {
 		Data:     data.NewModel(dbPool),
 		Tmdb:     tmdbClient,
 		// RedditBot:      redditBot,
-		Reddit:         redditClient,
-		Stopword:       stopword,
-		SessionManager: sessionManager,
+		Reddit:   redditClient,
+		Stopword: stopword,
 	}
 
 	e := api.SetupRoutes(h)

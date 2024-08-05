@@ -4,133 +4,59 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/alexedwards/scs/v2"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"github.com/pascaldekloe/jwt"
 	"github.com/priyankishorems/bollytics-go/api/handlers"
+	"github.com/priyankishorems/bollytics-go/utils"
 	"golang.org/x/time/rate"
 )
 
-func AuthenticateUserSession(h *handlers.Handlers) echo.MiddlewareFunc {
+var (
+	ErrUserUnauthorized = echo.NewHTTPError(http.StatusUnauthorized, "user unauthorized")
+)
+
+func Authenticate(h handlers.Handlers) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			ctx := c.Request().Context()
+			c.Response().Writer.Header().Add("Vary", "Authorization")
 
-			reddit_id := h.SessionManager.GetString(ctx, "reddit_id")
-			if reddit_id == "" {
+			authorizationHeader := c.Request().Header.Get("Authorization")
+			if authorizationHeader == "" {
 				h.Utils.UserUnAuthorizedResponse(c)
-				return errors.New("no session")
+				return ErrUserUnauthorized
 			}
 
-			exists, err := h.Data.Users.CheckUserExists(reddit_id)
-			if err != nil {
-				h.Utils.InternalServerError(c, err)
-				return err
-			}
-
-			if !exists {
+			headerParts := strings.Split(authorizationHeader, " ")
+			if len(headerParts) != 2 || headerParts[0] != "Bearer" {
 				h.Utils.UserUnAuthorizedResponse(c)
-				return errors.New("user not found")
+				return ErrUserUnauthorized
 			}
 
-			c.Set("reddit_id", reddit_id)
-			return next(c)
-		}
-	}
-}
+			token := headerParts[1]
 
-func CheckAuthenticateUserSession(h *handlers.Handlers) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ctx := c.Request().Context()
-
-			reddit_id := h.SessionManager.GetString(ctx, "reddit_id")
-			if reddit_id == "" {
-				c.Set("reddit_id", reddit_id)
-				return next(c)
-			}
-
-			exists, err := h.Data.Users.CheckUserExists(reddit_id)
+			claims, err := jwt.HMACCheck([]byte(token), []byte(h.Config.JWT.Secret))
 			if err != nil {
-				h.Utils.InternalServerError(c, err)
-				return err
-			}
-
-			if !exists {
 				h.Utils.UserUnAuthorizedResponse(c)
-				return errors.New("user not found")
+				return ErrUserUnauthorized
 			}
 
-			c.Set("reddit_id", reddit_id)
-			return next(c)
-		}
-	}
-}
-
-// func CacheControlWordCloud() echo.MiddlewareFunc {
-// 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-// 		return func(c echo.Context) error {
-// 			if strings.HasPrefix(c.Request().URL.Path, "/public/wordcloud/") &&
-// 				strings.HasSuffix(c.Request().URL.Path, "_wordcloud.png") {
-// 				// Cache for 6 hours
-// 				c.Response().Header().Set("Cache-Control", "public, max-age=21600, must-revalidate")
-// 			}
-// 			return next(c)
-// 		}
-// 	}
-// }
-
-func ManageSession(h *handlers.Handlers) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ctx := c.Request().Context()
-
-			var token string
-			cookie, err := c.Cookie(h.SessionManager.Cookie.Name)
-			if err == nil {
-				token = cookie.Value
+			if !claims.Valid(time.Now()) {
+				h.Utils.CustomErrorResponse(c, utils.Cake{"token expired": "Send refresh token"}, http.StatusUnauthorized, ErrUserUnauthorized)
+				return ErrUserUnauthorized
 			}
 
-			ctx, err = h.SessionManager.Load(ctx, token)
-			if err != nil {
-				return err
+			if claims.Issuer != h.Config.JWT.Issuer {
+				h.Utils.UserUnAuthorizedResponse(c)
+				return ErrUserUnauthorized
 			}
 
-			c.SetRequest(c.Request().WithContext(ctx))
+			reddit_uid := claims.Subject
 
-			c.Response().Before(func() {
-				if h.SessionManager.Status(ctx) != scs.Unmodified {
-					responseCookie := &http.Cookie{
-						Name:     h.SessionManager.Cookie.Name,
-						Path:     h.SessionManager.Cookie.Path,
-						Domain:   h.SessionManager.Cookie.Domain,
-						Secure:   h.SessionManager.Cookie.Secure,
-						HttpOnly: h.SessionManager.Cookie.HttpOnly,
-						SameSite: h.SessionManager.Cookie.SameSite,
-					}
-
-					switch h.SessionManager.Status(ctx) {
-					case scs.Modified:
-						token, _, err := h.SessionManager.Commit(ctx)
-						if err != nil {
-							log.Error("Failed to commit session: ", err)
-						}
-
-						responseCookie.Value = token
-
-					case scs.Destroyed:
-						responseCookie.Expires = time.Unix(1, 0)
-						responseCookie.MaxAge = -1
-					}
-
-					c.SetCookie(responseCookie)
-					c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
-					c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
-				}
-			})
+			c.Set("reddit_uid", reddit_uid)
 
 			return next(c)
 		}

@@ -18,7 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors", "youtube", "cinema", "release", "youtu", "instagram", "kinda", "share", "character", "characters", "video", "screen", "content", "version", "industry", "reddit"}
+var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors", "youtube", "cinema", "release", "youtu", "instagram", "kinda", "share", "character", "characters", "video", "screen", "content", "version", "industry", "reddit", "called", "tells"}
 
 type WordCount struct {
 	Word  string
@@ -296,7 +296,7 @@ func (h *Handlers) GetTrendingWordsHandlerWeb(c echo.Context) error {
 // reddit api doesn't provide snoovatar data. This url of reddit.com/user/{username}/about.json provides snoovatar data
 // but it is inconsistent, doesn't provide proper data for most users, also the image is not png, so not using it.
 func (h *Handlers) GetRedditUsersSnoovatar(c echo.Context, topUsers []data.TopUsers) error {
-	for i, _ := range topUsers {
+	for i := range topUsers {
 		user := &topUsers[i]
 
 		httpClient := http.Client{}
