@@ -18,7 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors", "youtube", "cinema", "release", "youtu", "instagram", "kinda", "share", "character", "characters", "video", "screen", "content", "version", "industry", "reddit", "called", "tells"}
+var excludedWords []string = []string{"movie", "movies", "watch", "film", "time", "films", "like", "watching", "good", "seen", "watched", "best", "better", "love", "loved", "https", "http", "webp", "png", "scene", "scenes", "song", "songs", "post", "posts", "guy", "guys", "people", "tamil", "telugu", "hindi", "malayalam", "kollywood", "bollywood", "mollywood", "tollywood", "music", "story", "actor", "actors", "youtube", "cinema", "release", "youtu", "instagram", "kinda", "share", "character", "characters", "video", "screen", "content", "version", "industry", "reddit", "called", "tells", "feel", "acting"}
 
 type WordCount struct {
 	Word  string
@@ -33,7 +33,7 @@ func (h *Handlers) getMostUsedWords(texts []string, limit int) ([]WordCount, err
 
 		words := strings.Fields(cleanText)
 		for _, word := range words {
-			if len(word) > 4 {
+			if len(word) > 3 {
 				if slices.Index(excludedWords, word) == -1 {
 					wordCounts[word]++
 				}

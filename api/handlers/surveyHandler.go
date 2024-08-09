@@ -40,8 +40,7 @@ func (h *Handlers) CreateSurveyHandler(c echo.Context) error {
 
 func (h *Handlers) CreateSurveyResponsesHandler(c echo.Context) error {
 	// todo Uncomment before deploying
-	// reddit_uid := c.Get("reddit_id").(string)
-	reddit_uid := reddit_uid_test
+	reddit_uid := c.Get("reddit_uid").(string)
 
 	surveyID, err := h.Utils.ReadIntParam(c, "survey_id")
 	if err != nil {
@@ -94,17 +93,24 @@ func (h *Handlers) GetAllSurveysHandler(c echo.Context) error {
 	filters.Page = h.Utils.ReadIntQuery(qs, "page", 1)
 	filters.PageSize = h.Utils.ReadIntQuery(qs, "page_size", 10)
 
+	sub := h.Utils.ReadStringQuery(qs, "sub", "all")
+
 	err := h.Validate.Struct(filters)
 	if err != nil {
 		h.Utils.ValidationError(c, err)
 		return err
 	}
 
-	surveys, metadata, err := h.Data.Surveys.GetAllSurveys(filters)
+	surveys, metadata, err := h.Data.Surveys.GetAllSurveys(sub, filters)
 	if err != nil {
 		h.Utils.InternalServerError(c, err)
 		return err
 	}
 
 	return c.JSON(http.StatusOK, Cake{"surveys": surveys, "metadata": metadata})
+}
+
+func (h *Handlers) GetSurveyResultsHandler(c echo.Context) error {
+
+	return nil
 }

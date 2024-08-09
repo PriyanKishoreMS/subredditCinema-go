@@ -106,13 +106,15 @@ func (h *Handlers) RefreshTokenHandler(c echo.Context) error {
 
 	authorizationHeader := c.Request().Header.Get("Authorization")
 	if authorizationHeader == "" {
-		h.Utils.UserUnAuthorizedResponse(c)
+		err := fmt.Errorf("authorization header not found")
+		h.Utils.UserUnAuthorizedResponse(c, err)
 		return ErrUserUnauthorized
 	}
 
 	headerParts := strings.Split(authorizationHeader, " ")
 	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-		h.Utils.UserUnAuthorizedResponse(c)
+		err := fmt.Errorf("invalid authorization header")
+		h.Utils.UserUnAuthorizedResponse(c, err)
 		return ErrUserUnauthorized
 	}
 
@@ -120,7 +122,7 @@ func (h *Handlers) RefreshTokenHandler(c echo.Context) error {
 
 	claims, err := jwt.HMACCheck([]byte(token), []byte(h.Config.JWT.Secret))
 	if err != nil {
-		h.Utils.UserUnAuthorizedResponse(c)
+		h.Utils.UserUnAuthorizedResponse(c, err)
 		return ErrUserUnauthorized
 	}
 
@@ -135,5 +137,5 @@ func (h *Handlers) RefreshTokenHandler(c echo.Context) error {
 		h.Utils.InternalServerError(c, err)
 		return err
 	}
-	return c.JSON(200, Cake{"access_token": string(accessToken)})
+	return c.JSON(200, Cake{"accessToken": string(accessToken)})
 }

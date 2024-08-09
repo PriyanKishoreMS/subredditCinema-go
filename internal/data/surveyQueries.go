@@ -60,6 +60,34 @@ const (
 	OFFSET $2
 	`
 
+	GetSubSurveyDetailsQuery = `
+	SELECT 
+    	COUNT(*) OVER () AS total,
+    	s.id,
+    	s.subreddit,
+    	s.title,
+    	s.description,
+    	s.end_time,
+    	s.is_result_public,
+		s.created_at,
+    	u.username,
+    	u.avatar,
+    	COALESCE(sr.response_count, 0) AS total_responses
+	FROM
+    	surveys s
+	INNER JOIN
+    	users u ON s.reddit_uid = u.reddit_uid
+	LEFT JOIN
+    	(SELECT survey_id, COUNT(*) AS response_count
+     	FROM survey_responses
+     	GROUP BY survey_id) sr ON sr.survey_id = s.id
+	where s.subreddit = $1
+	ORDER BY
+    	s.created_at DESC
+	LIMIT $2
+	OFFSET $3
+	`
+
 	GetSurveyDetailsQuery = `
 	SELECT 
     s.id,

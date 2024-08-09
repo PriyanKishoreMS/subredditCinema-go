@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -26,13 +27,15 @@ func Authenticate(h handlers.Handlers) echo.MiddlewareFunc {
 
 			authorizationHeader := c.Request().Header.Get("Authorization")
 			if authorizationHeader == "" {
-				h.Utils.UserUnAuthorizedResponse(c)
+				err := fmt.Errorf("authorization header not found")
+				h.Utils.UserUnAuthorizedResponse(c, err)
 				return ErrUserUnauthorized
 			}
 
 			headerParts := strings.Split(authorizationHeader, " ")
 			if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-				h.Utils.UserUnAuthorizedResponse(c)
+				err := fmt.Errorf("invalid authorization header")
+				h.Utils.UserUnAuthorizedResponse(c, err)
 				return ErrUserUnauthorized
 			}
 
@@ -40,7 +43,7 @@ func Authenticate(h handlers.Handlers) echo.MiddlewareFunc {
 
 			claims, err := jwt.HMACCheck([]byte(token), []byte(h.Config.JWT.Secret))
 			if err != nil {
-				h.Utils.UserUnAuthorizedResponse(c)
+				h.Utils.UserUnAuthorizedResponse(c, err)
 				return ErrUserUnauthorized
 			}
 
@@ -50,7 +53,8 @@ func Authenticate(h handlers.Handlers) echo.MiddlewareFunc {
 			}
 
 			if claims.Issuer != h.Config.JWT.Issuer {
-				h.Utils.UserUnAuthorizedResponse(c)
+				err := fmt.Errorf("invalid issuer")
+				h.Utils.UserUnAuthorizedResponse(c, err)
 				return ErrUserUnauthorized
 			}
 

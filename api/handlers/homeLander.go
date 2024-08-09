@@ -26,13 +26,13 @@ type Handlers struct {
 }
 
 func (h *Handlers) HomeFunc(c echo.Context) error {
-	_ = Cake{
-		"message": "Welcome to Bollytics API",
+	msg := Cake{
+		"message": "Welcome to SubredditCinema API",
 		"status":  "available",
 		"system_info": Cake{
 			"environment": h.Config.Env,
 			"port":        h.Config.Port,
 		},
 	}
-	return c.String(http.StatusOK, "Welcome! <a href='/login'>Login with Reddit</a>")
+	return c.JSON(http.StatusOK, msg)
 }

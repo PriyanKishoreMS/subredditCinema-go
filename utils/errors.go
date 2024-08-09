@@ -50,8 +50,9 @@ func (u *utilsImpl) EditConflictResponse(c echo.Context) {
 	u.resposeError(c, http.StatusConflict, message)
 }
 
-func (u *utilsImpl) UserUnAuthorizedResponse(c echo.Context) {
+func (u *utilsImpl) UserUnAuthorizedResponse(c echo.Context, err error) {
 	message := "You are not authorized to access this"
+	log.Error(err)
 	u.resposeError(c, http.StatusUnauthorized, message)
 }
 

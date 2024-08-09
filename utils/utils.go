@@ -38,7 +38,7 @@ type Utilities interface {
 	MethodNotFound(c echo.Context)
 	NotFoundResponse(c echo.Context)
 	EditConflictResponse(c echo.Context)
-	UserUnAuthorizedResponse(c echo.Context)
+	UserUnAuthorizedResponse(c echo.Context, err error)
 	RateLimitExceededResponse(c echo.Context)
 	CustomErrorResponse(c echo.Context, message Cake, status int, err error)
 	ValidationError(c echo.Context, err error)

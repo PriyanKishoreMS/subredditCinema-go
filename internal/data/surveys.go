@@ -120,23 +120,6 @@ func (s SurveysModel) CreateSurveyResponses(redditUID string, surveyID int, answ
 		}
 	}()
 
-	questionTypes := make(map[int]string)
-	rows, err := tx.Query(ctx, GetQuestionTypeQuery, surveyID)
-	if err != nil {
-		err = fmt.Errorf("error fetching question types: %v", err)
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id int
-		var qType string
-		if err = rows.Scan(&id, &qType); err != nil {
-			err = fmt.Errorf("error scanning question types: %v", err)
-			return
-		}
-		questionTypes[id] = qType
-	}
-
 	query := CreateResponseQuery
 	var responseID int
 
@@ -146,15 +129,6 @@ func (s SurveysModel) CreateSurveyResponses(redditUID string, surveyID int, answ
 	}
 
 	for _, a := range *answers {
-		questionType, exists := questionTypes[a.QuestionID]
-		if !exists {
-			err = fmt.Errorf("question %d not found in survey", a.QuestionID)
-			return
-		}
-
-		if err = validateAnswer(questionType, a); err != nil {
-			return
-		}
 
 		_, err = tx.Exec(ctx, CreateAnswerQuery, responseID, a.QuestionID, a.AnswerText, a.SelectedOptionID)
 		if err != nil {
@@ -162,26 +136,6 @@ func (s SurveysModel) CreateSurveyResponses(redditUID string, surveyID int, answ
 		}
 	}
 
-	return nil
-}
-
-func validateAnswer(questionType string, answer Answers) error {
-	switch questionType {
-	case "text":
-		if answer.AnswerText == "" {
-			return fmt.Errorf("text answer required for question %d", answer.QuestionID)
-		}
-	case "multiple":
-		if answer.SelectedOptionID == nil {
-			return fmt.Errorf("option selection required for question %d", answer.QuestionID)
-		}
-	case "single":
-		if answer.SelectedOptionID == nil {
-			return fmt.Errorf("option selection required for question %d", answer.QuestionID)
-		}
-	default:
-		return fmt.Errorf("unknown question type: %s", questionType)
-	}
 	return nil
 }
 
@@ -232,31 +186,52 @@ func (s SurveysModel) GetSurveyByID(surveyID int) (*Survey, error) {
 	return survey, nil
 }
 
-func (s SurveysModel) GetAllSurveys(filters Filters) ([]Survey, Metadata, error) {
+func (s SurveysModel) GetAllSurveys(sub string, filters Filters) ([]Survey, Metadata, error) {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
-	query := GetAllSurveyDetailsQuery
-
 	var surveys []Survey
+	totalRecords := 0
 
-	rows, err := s.DB.Query(ctx, query, filters.limit(), filters.offset())
+	if sub == "all" {
+		rows, err := s.DB.Query(ctx, GetAllSurveyDetailsQuery, filters.limit(), filters.offset())
+		if err != nil {
+			return nil, Metadata{}, err
+		}
+
+		defer rows.Close()
+
+		for rows.Next() {
+			survey := new(Survey)
+			if err := rows.Scan(&totalRecords, &survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.EndTime, &survey.IsResultPublic, &survey.CreatedAt, &survey.Username, &survey.Avatar, &survey.TotalResponses); err != nil {
+				return nil, Metadata{}, err
+			}
+			surveys = append(surveys, *survey)
+
+		}
+
+		metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+		return surveys, metadata, nil
+	}
+
+	rows, err := s.DB.Query(ctx, GetSubSurveyDetailsQuery, sub, filters.limit(), filters.offset())
 	if err != nil {
 		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
 
-	totalRecords := 0
 	for rows.Next() {
 		survey := new(Survey)
 		if err := rows.Scan(&totalRecords, &survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.EndTime, &survey.IsResultPublic, &survey.CreatedAt, &survey.Username, &survey.Avatar, &survey.TotalResponses); err != nil {
 			return nil, Metadata{}, err
 		}
 		surveys = append(surveys, *survey)
+
 	}
 
 	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
-
 	return surveys, metadata, nil
+
 }
