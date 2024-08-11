@@ -112,5 +112,17 @@ func (h *Handlers) GetAllSurveysHandler(c echo.Context) error {
 
 func (h *Handlers) GetSurveyResultsHandler(c echo.Context) error {
 
-	return nil
+	surveyID, err := h.Utils.ReadIntParam(c, "survey_id")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return err
+	}
+
+	results, err := h.Data.Surveys.GetAllResultCounts(surveyID)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Cake{"results": results})
 }

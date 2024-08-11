@@ -134,4 +134,39 @@ const (
 	ORDER BY 
     	sq.question_order, so.option_order;
 	`
+
+	GetSurveyAnswerCountsQuery = `
+	SELECT 
+    sq.id AS question_id,
+    so.id AS option_id,
+    COUNT(sa.selected_option_id) AS selection_count
+	FROM 
+    	survey_questions sq
+	JOIN 
+    	survey_options so ON sq.id = so.question_id
+	LEFT JOIN 
+    	survey_answers sa ON so.id = sa.selected_option_id
+	WHERE 
+    	sq.survey_id = $1
+	GROUP BY 
+    	sq.id, sq.question_text, so.id, so.option_text
+	ORDER BY 
+    	sq.id, so.id;
+	`
+
+	GetResponsesToEachQuestionQuery = `
+	SELECT 
+    sq.id AS question_id,
+    COUNT(DISTINCT sa.response_id) AS response_count
+	FROM 
+    	survey_questions sq
+	LEFT JOIN 
+    	survey_answers sa ON sq.id = sa.question_id
+	WHERE 
+    	sq.survey_id = $1 and sq.question_type != 'text'
+	GROUP BY 
+    	sq.id
+	ORDER BY 
+    	sq.id;
+	`
 )

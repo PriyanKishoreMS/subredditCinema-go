@@ -235,3 +235,74 @@ func (s SurveysModel) GetAllSurveys(sub string, filters Filters) ([]Survey, Meta
 	return surveys, metadata, nil
 
 }
+
+type Result struct {
+	QuestionID    int           `json:"question_id"`
+	ResponseCount int           `json:"response_count"`
+	ResultCount   []ResultCount `json:"result_count"`
+}
+
+type ResultCount struct {
+	OptionID int `json:"option_id"`
+	Count    int `json:"count"`
+}
+
+func (s SurveysModel) GetAllResultCounts(surveyID int) (map[int]*Result, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := GetSurveyAnswerCountsQuery
+
+	rows, err := s.DB.Query(ctx, query, surveyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	resultMap := make(map[int]*Result)
+
+	for rows.Next() {
+		var questionID, optionID, count int
+		if err := rows.Scan(&questionID, &optionID, &count); err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
+
+		result, exists := resultMap[questionID]
+		if !exists {
+			result = &Result{QuestionID: questionID}
+			resultMap[questionID] = result
+		}
+
+		result.ResultCount = append(result.ResultCount, ResultCount{
+			OptionID: optionID,
+			Count:    count,
+		})
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error after iterating rows: %w", err)
+	}
+
+	query = GetResponsesToEachQuestionQuery
+
+	rows, err = s.DB.Query(ctx, query, surveyID)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var questionID, responseCount int
+		if err := rows.Scan(&questionID, &responseCount); err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
+
+		result, exists := resultMap[questionID]
+		if !exists {
+			return nil, fmt.Errorf("response count for question %d not found", questionID)
+		}
+
+		result.ResponseCount = responseCount
+	}
+
+	return resultMap, nil
+}
