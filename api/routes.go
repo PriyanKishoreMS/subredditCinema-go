@@ -32,18 +32,18 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		{
 			survey.POST("/create", h.CreateSurveyHandler)
 			survey.POST("/response/:survey_id", h.CreateSurveyResponsesHandler, Authenticate(*h))
-			survey.GET("/:survey_id", h.GetSurveyByIDHandler)
+			survey.GET("/:survey_id", h.GetSurveyByIDHandler, OptionalAuthenticate(*h))
 			survey.GET("", h.GetAllSurveysHandler)
 			survey.GET("/results/:survey_id", h.GetSurveyResultsHandler)
 		}
 
 		poll := api.Group("/poll")
 		{
-			poll.GET("/:sub/all", h.GetAllPollsHandler)
+			poll.GET("/:sub/all", h.GetAllPollsHandler, OptionalAuthenticate(*h))
 			poll.GET("/:poll_id", h.GetPollByIDHandler)
 			// todo Should Add Middleware to Authenticate User before deploying
 			poll.POST("/create", h.CreatePollHandler)
-			poll.POST("/vote/:poll_id/:option_id", h.CreatePollVoteHandler)
+			poll.POST("/vote/:poll_id/:option_id", h.CreatePollVoteHandler, Authenticate(*h))
 			poll.DELETE("/delete/:poll_id", h.DeletePollByCreatorHandler)
 		}
 

@@ -24,6 +24,7 @@ type Survey struct {
 	IsResultPublic bool       `json:"is_result_public"`
 	TotalResponses int        `json:"total_responses"`
 	Questions      []Question `json:"questions,omitempty" validate:"required,dive"`
+	IsResponded    bool       `json:"is_responded,omitempty"`
 }
 
 type Question struct {
@@ -305,4 +306,19 @@ func (s SurveysModel) GetAllResultCounts(surveyID int) (map[int]*Result, error) 
 	}
 
 	return resultMap, nil
+}
+
+func (s SurveysModel) CheckIfUserResponded(redditUID string, surveyID int) (bool, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	var isResponded bool
+
+	query := `SELECT EXISTS(SELECT 1 FROM survey_responses WHERE reddit_uid = $1 AND survey_id = $2)`
+
+	err := s.DB.QueryRow(ctx, query, redditUID, surveyID).Scan(&isResponded)
+	if err != nil {
+		return false, err
+	}
+	return isResponded, nil
 }

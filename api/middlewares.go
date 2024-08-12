@@ -67,6 +67,52 @@ func Authenticate(h handlers.Handlers) echo.MiddlewareFunc {
 	}
 }
 
+func OptionalAuthenticate(h handlers.Handlers) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Writer.Header().Add("Vary", "Authorization")
+
+			authorizationHeader := c.Request().Header.Get("Authorization")
+			if authorizationHeader == "" {
+				c.Set("reddit_uid", "")
+				return next(c)
+			}
+
+			headerParts := strings.Split(authorizationHeader, " ")
+			if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+				err := fmt.Errorf("invalid authorization header")
+				h.Utils.UserUnAuthorizedResponse(c, err)
+				return ErrUserUnauthorized
+			}
+
+			token := headerParts[1]
+
+			claims, err := jwt.HMACCheck([]byte(token), []byte(h.Config.JWT.Secret))
+			if err != nil {
+				h.Utils.UserUnAuthorizedResponse(c, err)
+				return ErrUserUnauthorized
+			}
+
+			if !claims.Valid(time.Now()) {
+				h.Utils.CustomErrorResponse(c, utils.Cake{"token expired": "Send refresh token"}, http.StatusUnauthorized, ErrUserUnauthorized)
+				return ErrUserUnauthorized
+			}
+
+			if claims.Issuer != h.Config.JWT.Issuer {
+				err := fmt.Errorf("invalid issuer")
+				h.Utils.UserUnAuthorizedResponse(c, err)
+				return ErrUserUnauthorized
+			}
+
+			reddit_uid := claims.Subject
+
+			c.Set("reddit_uid", reddit_uid)
+
+			return next(c)
+		}
+	}
+}
+
 func IPRateLimit(h *handlers.Handlers) echo.MiddlewareFunc {
 
 	type client struct {

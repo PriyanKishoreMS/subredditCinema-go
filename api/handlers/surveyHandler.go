@@ -71,6 +71,8 @@ func (h *Handlers) CreateSurveyResponsesHandler(c echo.Context) error {
 }
 
 func (h *Handlers) GetSurveyByIDHandler(c echo.Context) error {
+	reddit_uid := c.Get("reddit_uid").(string)
+
 	surveyID, err := h.Utils.ReadIntParam(c, "survey_id")
 	if err != nil {
 		h.Utils.BadRequest(c, err)
@@ -81,6 +83,10 @@ func (h *Handlers) GetSurveyByIDHandler(c echo.Context) error {
 	if err != nil {
 		h.Utils.InternalServerError(c, err)
 		return err
+	}
+
+	if reddit_uid != "" {
+		survey.IsResponded, err = h.Data.Surveys.CheckIfUserResponded(reddit_uid, surveyID)
 	}
 
 	return c.JSON(http.StatusOK, survey)
