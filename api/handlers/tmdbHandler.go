@@ -64,7 +64,7 @@ func (h *Handlers) SearchActorsHandler(c echo.Context) error {
 			res = append(res, response{
 				Id:    v.ID,
 				Name:  v.Name,
-				Image: fmt.Sprintf("https://image.tmdb.org/t/p/w%d/%s", width, v.ProfilePath),
+				Image: fmt.Sprintf("https://image.tmdb.org/t/p/w%d%s", width, v.ProfilePath),
 			})
 		}
 	}

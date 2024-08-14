@@ -1,0 +1,29 @@
+@host = http://localhost:3000
+
+###
+post {{host}}/api/tierlist/create
+Content-Type: application/json
+
+{
+    "title": "VJna best movies tierlist",
+    "subreddit": "kollywood",
+    "tiers": [
+        {
+            "label": "S",
+            "color": "#FF0000"
+        },
+        {
+            "label": "A",
+            "color": "#00FF00"
+        },
+        {
+            "label": "B",
+            "color": "#0000FF"
+        }
+    ],
+    "urls": [
+        "https://image.tmdb.org/t/p/w500/4q2hz2m8hubgvijz8Ez0T2Os2Yv.jpg",
+        "https://image.tmdb.org/t/p/w500/6ApDtO7xaWAfPqfi2IARXIzj8QS.jpg",
+        "https://image.tmdb.org/t/p/w300/iGveyp8DuSr3YHK7m6faOXTKrjN.jpg"
+    ]
+}

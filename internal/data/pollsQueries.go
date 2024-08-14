@@ -2,8 +2,8 @@ package data
 
 const (
 	CreatePollsQuery = `
-	INSERT INTO polls (reddit_uid, subreddit, title, description, options, voting_method, end_time)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+	INSERT INTO polls (reddit_uid, subreddit, title, description, options, end_time)
+    VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
 	GetAllPollsQuery = `
@@ -14,7 +14,6 @@ const (
     	p.title, 
     	p.description, 
     	p.options, 
-    	p.voting_method, 
     	p.start_time, 
     	p.end_time, 
     	p.is_active, 
@@ -48,7 +47,6 @@ const (
     	p.title, 
     	p.description, 
     	p.options, 
-    	p.voting_method, 
     	p.start_time, 
     	p.end_time, 
     	p.is_active, 
@@ -86,7 +84,6 @@ const (
     	p.title,
     	p.description,
     	p.options,
-    	p.voting_method,
     	p.start_time,
     	p.end_time,
     	p.is_active, 

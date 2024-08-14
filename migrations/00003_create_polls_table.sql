@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS polls (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     options JSONB NOT NULL, 
-    voting_method VARCHAR(32) NOT NULL,
     start_time timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     end_time timestamp(0) with time zone NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,

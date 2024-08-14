@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
@@ -42,19 +41,8 @@ func (h *Handlers) CreatePollHandler(c echo.Context) error {
 	// 	return nil
 	// }
 
-	if input.VotingMethod == "" {
-		input.VotingMethod = "reddit_oauth2"
-	}
-
 	if input.EndTime.IsZero() {
 		input.EndTime = time.Now().Add(24 * time.Hour)
-	}
-
-	var options []data.PollOption
-
-	if err := json.Unmarshal(input.Options, &options); err != nil {
-		h.Utils.InternalServerError(c, fmt.Errorf("error in unmarshalling options; %v", err))
-		return err
 	}
 
 	if err := h.Validate.Struct(input); err != nil {
@@ -62,14 +50,7 @@ func (h *Handlers) CreatePollHandler(c echo.Context) error {
 		return err
 	}
 
-	for _, option := range options {
-		if err := h.Validate.Struct(option); err != nil {
-			h.Utils.ValidationError(c, err)
-			return err
-		}
-	}
-
-	if err := h.Data.Polls.InsertNewPoll(input, options); err != nil {
+	if err := h.Data.Polls.InsertNewPoll(input); err != nil {
 		h.Utils.InternalServerError(c, fmt.Errorf("error in inserting poll; %v", err))
 		return err
 	}

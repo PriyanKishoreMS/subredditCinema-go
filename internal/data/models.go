@@ -13,17 +13,19 @@ func Handlectx() (context.Context, context.CancelFunc) {
 }
 
 type Models struct {
-	Posts   PostModel
-	Users   UserModel
-	Polls   PollsModel
-	Surveys SurveysModel
+	Posts     PostModel
+	Users     UserModel
+	Polls     PollsModel
+	Surveys   SurveysModel
+	Tierlists TierlistsModel
 }
 
 func NewModel(db *pgx.Pool) Models {
 	return Models{
-		Posts:   PostModel{DB: db},
-		Users:   UserModel{DB: db},
-		Polls:   PollsModel{DB: db},
-		Surveys: SurveysModel{DB: db},
+		Posts:     PostModel{DB: db},
+		Users:     UserModel{DB: db},
+		Polls:     PollsModel{DB: db},
+		Surveys:   SurveysModel{DB: db},
+		Tierlists: TierlistsModel{DB: db},
 	}
 }

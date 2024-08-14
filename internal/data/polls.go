@@ -18,45 +18,43 @@ type PollOption struct {
 }
 
 type Poll struct {
-	RedditUID    string          `json:"reddit_uid" validate:"required"`
-	Subreddit    string          `json:"subreddit" validate:"required"`
-	Title        string          `json:"title" validate:"required"`
-	Description  string          `json:"description"`
-	Options      json.RawMessage `json:"options" validate:"required"`
-	VotingMethod string          `json:"voting_method"`
-	EndTime      time.Time       `json:"end_time" validate:"required"`
+	RedditUID   string       `json:"reddit_uid" validate:"required"`
+	Subreddit   string       `json:"subreddit" validate:"required"`
+	Title       string       `json:"title" validate:"required"`
+	Description string       `json:"description"`
+	Options     []PollOption `json:"options" validate:"required,dive"`
+	EndTime     time.Time    `json:"end_time" validate:"required"`
 }
 
 type PollDataResponse struct {
-	ID           int             `json:"id"`
-	RedditUID    string          `json:"reddit_uid"`
-	Subreddit    string          `json:"subreddit"`
-	Title        string          `json:"title"`
-	Description  string          `json:"description"`
-	Options      json.RawMessage `json:"options"`
-	VotingMethod string          `json:"voting_method"`
-	StartTime    time.Time       `json:"start_time"`
-	EndTime      time.Time       `json:"end_time"`
-	IsActive     bool            `json:"is_active"`
-	UserName     string          `json:"user_name"`
-	UserAvatar   string          `json:"user_avatar"`
-	TotalVotes   int             `json:"total_votes"`
-	VoteCount    json.RawMessage `json:"vote_count"`
-	UserVote     *int            `json:"user_vote,omitempty"`
+	ID          int             `json:"id"`
+	RedditUID   string          `json:"reddit_uid"`
+	Subreddit   string          `json:"subreddit"`
+	Title       string          `json:"title"`
+	Description string          `json:"description"`
+	Options     json.RawMessage `json:"options"`
+	StartTime   time.Time       `json:"start_time"`
+	EndTime     time.Time       `json:"end_time"`
+	IsActive    bool            `json:"is_active"`
+	UserName    string          `json:"user_name"`
+	UserAvatar  string          `json:"user_avatar"`
+	TotalVotes  int             `json:"total_votes"`
+	VoteCount   json.RawMessage `json:"vote_count"`
+	UserVote    *int            `json:"user_vote,omitempty"`
 }
 
-func (p PollsModel) InsertNewPoll(poll *Poll, options []PollOption) error {
+func (p PollsModel) InsertNewPoll(poll *Poll) error {
 	ctx, cancel := Handlectx()
 	defer cancel()
 
 	query := CreatePollsQuery
 
-	for i := range options {
-		option := &options[i]
+	for i := range poll.Options {
+		option := &poll.Options[i]
 		option.ID = i + 1
 	}
 
-	_, err := p.DB.Exec(ctx, query, poll.RedditUID, poll.Subreddit, poll.Title, poll.Description, options, poll.VotingMethod, poll.EndTime)
+	_, err := p.DB.Exec(ctx, query, poll.RedditUID, poll.Subreddit, poll.Title, poll.Description, poll.Options, poll.EndTime)
 	if err != nil {
 		return err
 	}
@@ -95,7 +93,7 @@ func (p PollsModel) GetAllPolls(sub string, filters Filters) ([]PollDataResponse
 	totalRecords := 0
 	for rows.Next() {
 		var poll PollDataResponse
-		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.VotingMethod, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
+		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
 		if err != nil {
 			return nil, Metadata{}, err
 		}
@@ -123,7 +121,7 @@ func (p PollsModel) GetAllPollsSigned(redditUID, sub string, filters Filters) ([
 	totalRecords := 0
 	for rows.Next() {
 		var poll PollDataResponse
-		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.VotingMethod, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount, &poll.UserVote)
+		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount, &poll.UserVote)
 		if err != nil {
 			return nil, Metadata{}, err
 		}
@@ -142,7 +140,7 @@ func (p PollsModel) GetPollByID(pollID int) (*PollDataResponse, error) {
 	query := GetPollByIDQuery
 
 	var poll PollDataResponse
-	err := p.DB.QueryRow(ctx, query, pollID).Scan(&poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.VotingMethod, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
+	err := p.DB.QueryRow(ctx, query, pollID).Scan(&poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,7 @@ import (
 func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		// AllowOrigins:     []string{"http://localhost:5173"},
 		AllowCredentials: true,
 	}))
 	e.Use(IPRateLimit(h))
@@ -25,9 +25,18 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e.GET("/login", h.LoginHandler)
 	e.GET("/callback", h.CallbackHandler)
 	e.GET("/refresh", h.RefreshTokenHandler)
+	e.GET("/proxy/:url", h.ProxyHandler)
 
 	api := e.Group("/api")
 	{
+
+		tierlist := api.Group("/tierlist")
+		{
+			tierlist.POST("/create", h.CreateTierListHandler)
+			tierlist.GET("/all/:sub", h.GetAllTierlistHandler)
+			tierlist.GET("/:id", h.GetTierListByIDHandler)
+		}
+
 		survey := api.Group("/survey")
 		{
 			survey.POST("/create", h.CreateSurveyHandler)
@@ -68,7 +77,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		}
 		updatePostsAtTime := gocron.NewAtTime(23, 40, 00)
 		updatePostsAtTimes := gocron.NewAtTimes(updatePostsAtTime)
-		updateWordCloudAtTime := gocron.NewAtTime(23, 40, 30)
+		updateWordCloudAtTime := gocron.NewAtTime(23, 42, 00)
 		updateWordCloudAtTimes := gocron.NewAtTimes(updateWordCloudAtTime)
 
 		updateRedditPostsJob, err := jobs.UpdateRedditPostsJob(*h, scheduler, updatePostsAtTimes)

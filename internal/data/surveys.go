@@ -69,6 +69,7 @@ func (s SurveysModel) CreateSurvey(survey *Survey) (err error) {
 			err = tx.Commit(ctx)
 		}
 	}()
+
 	query := CreateSurveyQuery
 	var surveyID int
 

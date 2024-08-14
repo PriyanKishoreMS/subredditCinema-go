@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS survey_options (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     question_id INT NOT NULL,
     option_order INT NOT NULL,
     option_text TEXT NOT NULL,
