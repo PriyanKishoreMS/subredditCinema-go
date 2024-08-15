@@ -25,6 +25,8 @@ type TierListData struct {
 	Urls      []string   `json:"urls,omitempty" validate:"required"`
 	CreatedAt time.Time  `json:"created_at"`
 	ImageURL  string     `json:"image_url,omitempty"`
+	Avatar    string     `json:"avatar,omitempty"`
+	Username  string     `json:"username,omitempty"`
 }
 
 func (t TierlistsModel) CreateNewTierListTemplate(reddit_uid string, tierListData TierListData) (err error) {
@@ -91,7 +93,7 @@ func (t TierlistsModel) GetAllTierlists(sub string, filters Filters) ([]TierList
 
 	for rows.Next() {
 		tierlist := new(TierListData)
-		if err := rows.Scan(&tierlist.ID, &tierlist.RedditUID, &tierlist.Title, &tierlist.Subreddit, &tierlist.CreatedAt, &tierlist.ImageURL, &totalRecords); err != nil {
+		if err := rows.Scan(&tierlist.ID, &tierlist.RedditUID, &tierlist.Title, &tierlist.Subreddit, &tierlist.CreatedAt, &tierlist.ImageURL, &tierlist.Avatar, &tierlist.Username, &totalRecords); err != nil {
 			return nil, Metadata{}, err
 		}
 		tierLists = append(tierLists, *tierlist)
@@ -99,7 +101,6 @@ func (t TierlistsModel) GetAllTierlists(sub string, filters Filters) ([]TierList
 
 	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
 	return tierLists, metadata, nil
-
 }
 
 func (t TierlistsModel) GetTierListByID(tierlistID int) (*TierListData, error) {

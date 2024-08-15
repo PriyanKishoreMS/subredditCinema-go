@@ -69,5 +69,5 @@ func (h *Handlers) GetTierListByIDHandler(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, Cake{"tier_list": tierList})
+	return c.JSON(http.StatusOK, tierList)
 }
