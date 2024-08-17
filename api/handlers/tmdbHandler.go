@@ -44,7 +44,7 @@ func (h *Handlers) SearchActorsHandler(c echo.Context) error {
 	if err != nil {
 		log.Error(fmt.Sprintf("Error fetching actor details: %v", err))
 		return c.JSON(http.StatusInternalServerError, Cake{
-			"message": "Error fetching actor details",
+			"message": "Error fetching actor details, try again",
 			"status":  "error",
 		})
 	}
@@ -104,7 +104,7 @@ func (h *Handlers) SearchMoviesHandler(c echo.Context) error {
 	if err != nil {
 		log.Error(fmt.Sprintf("Error fetching movie details: %v", err))
 		return c.JSON(http.StatusInternalServerError, Cake{
-			"message": "Error fetching movie details",
+			"message": "Error fetching movie details, try again",
 			"status":  "error",
 		})
 	}

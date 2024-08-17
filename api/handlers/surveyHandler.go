@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -9,9 +10,7 @@ import (
 )
 
 func (h *Handlers) CreateSurveyHandler(c echo.Context) error {
-	// todo Uncomment before deploying
-	// reddit_uid := c.Get("reddit_id").(string)
-	reddit_uid := reddit_uid_test
+	reddit_uid := c.Get("reddit_uid").(string)
 	survey := new(data.Survey)
 
 	survey.RedditUID = reddit_uid
@@ -39,7 +38,6 @@ func (h *Handlers) CreateSurveyHandler(c echo.Context) error {
 }
 
 func (h *Handlers) CreateSurveyResponsesHandler(c echo.Context) error {
-	// todo Uncomment before deploying
 	reddit_uid := c.Get("reddit_uid").(string)
 
 	surveyID, err := h.Utils.ReadIntParam(c, "survey_id")
@@ -131,4 +129,22 @@ func (h *Handlers) GetSurveyResultsHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, Cake{"results": results})
+}
+
+func (h *Handlers) DeleteSurveyByCreatorHandler(c echo.Context) error {
+	reddit_uid := c.Get("reddit_uid").(string)
+
+	surveyID, err := h.Utils.ReadIntParam(c, "survey_id")
+	if err != nil {
+		h.Utils.BadRequest(c, fmt.Errorf("error in reading survey_id; %v", err))
+		return err
+	}
+
+	fmt.Println(surveyID, "surveyID")
+
+	if err := h.Data.Surveys.DeleteSurveyByCreator(surveyID, reddit_uid); err != nil {
+		h.Utils.InternalServerError(c, fmt.Errorf("error in deleting survey; %v", err))
+	}
+
+	return c.JSON(http.StatusOK, Cake{"message": "survey deleted"})
 }

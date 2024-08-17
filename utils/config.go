@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/tls"
 	"net"
 	"net/http"
 	"os"
@@ -50,6 +51,7 @@ var HttpClientConfig = &http.Client{
 		MaxIdleConnsPerHost: 100,
 		IdleConnTimeout:     90 * time.Second,
 		DisableKeepAlives:   false,
+		ForceAttemptHTTP2:   true,
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
@@ -57,6 +59,9 @@ var HttpClientConfig = &http.Client{
 		TLSHandshakeTimeout:   10 * time.Second,
 		ResponseHeaderTimeout: 10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	},
 }
 

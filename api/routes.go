@@ -32,28 +32,28 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		tierlist := api.Group("/tierlist")
 		{
-			tierlist.POST("/create", h.CreateTierListHandler)
+			tierlist.POST("/create", h.CreateTierListHandler, Authenticate(*h))
 			tierlist.GET("/all/:sub", h.GetAllTierlistHandler)
 			tierlist.GET("/:id", h.GetTierListByIDHandler)
 		}
 
 		survey := api.Group("/survey")
 		{
-			survey.POST("/create", h.CreateSurveyHandler)
+			survey.POST("/create", h.CreateSurveyHandler, Authenticate(*h))
 			survey.POST("/response/:survey_id", h.CreateSurveyResponsesHandler, Authenticate(*h))
 			survey.GET("/:survey_id", h.GetSurveyByIDHandler, OptionalAuthenticate(*h))
 			survey.GET("", h.GetAllSurveysHandler)
 			survey.GET("/results/:survey_id", h.GetSurveyResultsHandler)
+			survey.DELETE("/delete/:survey_id", h.DeleteSurveyByCreatorHandler, Authenticate(*h))
 		}
 
 		poll := api.Group("/poll")
 		{
 			poll.GET("/:sub/all", h.GetAllPollsHandler, OptionalAuthenticate(*h))
 			poll.GET("/:poll_id", h.GetPollByIDHandler)
-			// todo Should Add Middleware to Authenticate User before deploying
-			poll.POST("/create", h.CreatePollHandler)
+			poll.POST("/create", h.CreatePollHandler, Authenticate(*h))
 			poll.POST("/vote/:poll_id/:option_id", h.CreatePollVoteHandler, Authenticate(*h))
-			poll.DELETE("/delete/:poll_id", h.DeletePollByCreatorHandler)
+			poll.DELETE("/delete/:poll_id", h.DeletePollByCreatorHandler, Authenticate(*h))
 		}
 
 		tmdb := api.Group("/tmdb")
@@ -75,9 +75,9 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		if err != nil {
 			log.Fatal("Error creating scheduler", err)
 		}
-		updatePostsAtTime := gocron.NewAtTime(23, 40, 00)
+		updatePostsAtTime := gocron.NewAtTime(23, 45, 00)
 		updatePostsAtTimes := gocron.NewAtTimes(updatePostsAtTime)
-		updateWordCloudAtTime := gocron.NewAtTime(23, 42, 00)
+		updateWordCloudAtTime := gocron.NewAtTime(23, 47, 00)
 		updateWordCloudAtTimes := gocron.NewAtTimes(updateWordCloudAtTime)
 
 		updateRedditPostsJob, err := jobs.UpdateRedditPostsJob(*h, scheduler, updatePostsAtTimes)

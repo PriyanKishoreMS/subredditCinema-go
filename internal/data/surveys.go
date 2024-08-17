@@ -205,7 +205,7 @@ func (s SurveysModel) GetAllSurveys(sub string, filters Filters) ([]Survey, Meta
 
 		for rows.Next() {
 			survey := new(Survey)
-			if err := rows.Scan(&totalRecords, &survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.EndTime, &survey.IsResultPublic, &survey.CreatedAt, &survey.Username, &survey.Avatar, &survey.TotalResponses); err != nil {
+			if err := rows.Scan(&totalRecords, &survey.SurveyID, &survey.Subreddit, &survey.Title, &survey.Description, &survey.EndTime, &survey.IsResultPublic, &survey.CreatedAt, &survey.Username, &survey.Avatar, &survey.RedditUID, &survey.TotalResponses); err != nil {
 				return nil, Metadata{}, err
 			}
 			surveys = append(surveys, *survey)
@@ -322,4 +322,18 @@ func (s SurveysModel) CheckIfUserResponded(redditUID string, surveyID int) (bool
 		return false, err
 	}
 	return isResponded, nil
+}
+
+func (s SurveysModel) DeleteSurveyByCreator(surveyID int, redditUID string) error {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := `DELETE FROM surveys WHERE id = $1 AND reddit_uid = $2`
+
+	_, err := s.DB.Exec(ctx, query, surveyID, redditUID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

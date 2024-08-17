@@ -19,8 +19,7 @@ func (h *Handlers) CreatePollHandler(c echo.Context) error {
 	var input *data.Poll
 
 	// todo Uncomment before deploying
-	// reddit_uid := c.Get("reddit_id").(string)
-	reddit_uid := reddit_uid_test
+	reddit_uid := c.Get("reddit_uid").(string)
 
 	if err := h.Utils.ReadJSON(c, &input); err != nil {
 		h.Utils.BadRequest(c, fmt.Errorf("error in reading json; %v", err))
@@ -162,9 +161,7 @@ func (h *Handlers) CreatePollVoteHandler(c echo.Context) error {
 }
 
 func (h *Handlers) DeletePollByCreatorHandler(c echo.Context) error {
-	// todo Uncomment before deploying
-	// reddit_uid := c.Get("reddit_id").(string)
-	reddit_uid := reddit_uid_test
+	reddit_uid := c.Get("reddit_uid").(string)
 
 	pollID, err := h.Utils.ReadIntParam(c, "poll_id")
 	if err != nil {

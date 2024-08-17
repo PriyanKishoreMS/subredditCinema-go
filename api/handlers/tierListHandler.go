@@ -9,8 +9,7 @@ import (
 )
 
 func (h *Handlers) CreateTierListHandler(c echo.Context) error {
-	reddit_uid := reddit_uid_test
-	// reddit_uid := c.Get("reddit_uid").(string)
+	reddit_uid := c.Get("reddit_uid").(string)
 
 	var input *data.TierListData
 

@@ -45,6 +45,7 @@ const (
 		s.created_at,
     	u.username,
     	u.avatar,
+		u.reddit_uid,
     	COALESCE(sr.response_count, 0) AS total_responses
 	FROM
     	surveys s
