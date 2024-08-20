@@ -85,6 +85,10 @@ func (h *Handlers) GetSurveyByIDHandler(c echo.Context) error {
 
 	if reddit_uid != "" {
 		survey.IsResponded, err = h.Data.Surveys.CheckIfUserResponded(reddit_uid, surveyID)
+		if err != nil {
+			h.Utils.InternalServerError(c, err)
+			return err
+		}
 	}
 
 	return c.JSON(http.StatusOK, survey)

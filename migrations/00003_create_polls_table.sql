@@ -9,12 +9,11 @@ CREATE TABLE IF NOT EXISTS polls (
     options JSONB NOT NULL, 
     start_time timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     end_time timestamp(0) with time zone NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (reddit_uid) REFERENCES users(reddit_uid)
 );
 
-CREATE INDEX IF NOT EXISTS idx_polls_reddit_uid ON polls(reddit_uid)
-CREATE INDEX IF NOT EXISTS idx_polls_subreddit ON polls(subreddit)
+CREATE INDEX IF NOT EXISTS idx_polls_reddit_uid ON polls(reddit_uid);
+CREATE INDEX IF NOT EXISTS idx_polls_subreddit ON polls(subreddit);
 -- +goose StatementEnd
 
 -- +goose Down

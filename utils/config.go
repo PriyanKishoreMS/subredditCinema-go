@@ -22,7 +22,7 @@ var (
 	RedditSecret       string = os.Getenv("REDDIT_API_SECRET")
 	RedditUsername     string = os.Getenv("REDDIT_USERNAME")
 	RedditPassword     string = os.Getenv("REDDIT_PASSWORD")
-	RedirectURL        string = "http://localhost:3000/callback"
+	RedirectURL        string = os.Getenv("REDDIT_REDIRECT_URL")
 	RedditUserAgent    string = os.Getenv("REDDIT_USER_AGENT")
 	RedditIdWeb        string = os.Getenv("REDDIT_API_ID_WEB")
 	RedditSecretWeb    string = os.Getenv("REDDIT_API_SECRET_WEB")

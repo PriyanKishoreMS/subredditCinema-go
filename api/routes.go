@@ -17,14 +17,13 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	}))
 	e.Use(IPRateLimit(h))
 	e.Use(middleware.RemoveTrailingSlash())
-	// e.Use(CacheControlWordCloud())
 	e.Static("/public", "public")
 
 	e.HideBanner = true
 	e.GET("/", h.HomeFunc)
 	e.GET("/login", h.LoginHandler)
 	e.GET("/callback", h.CallbackHandler)
-	e.GET("/refresh", h.RefreshTokenHandler)
+	e.GET("/refresh", h.RefreshTokenHandler, Authenticate(*h))
 	e.GET("/proxy/:url", h.ProxyHandler)
 
 	api := e.Group("/api")
@@ -69,6 +68,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 			reddit.GET("/:sub/frequency", h.GetPostFrequencyHandler)
 			reddit.GET("/:sub/:category/users", h.GetTopUsersHandler)
 			reddit.GET("/:sub/:category/posts", h.GetTopPostsHandler)
+			// reddit.GET("/update", h.UpdatePostsFromRedditHandler)
 		}
 
 		scheduler, err := gocron.NewScheduler()
@@ -77,7 +77,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		}
 		updatePostsAtTime := gocron.NewAtTime(23, 45, 00)
 		updatePostsAtTimes := gocron.NewAtTimes(updatePostsAtTime)
-		updateWordCloudAtTime := gocron.NewAtTime(23, 47, 00)
+		updateWordCloudAtTime := gocron.NewAtTime(23, 55, 00)
 		updateWordCloudAtTimes := gocron.NewAtTimes(updateWordCloudAtTime)
 
 		updateRedditPostsJob, err := jobs.UpdateRedditPostsJob(*h, scheduler, updatePostsAtTimes)

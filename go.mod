@@ -14,6 +14,7 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/pascaldekloe/jwt v1.12.0
 	github.com/toadharvard/stopwords-iso v0.1.5
+	github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce
 	github.com/turnage/graw v0.0.0-20201204201853-a177df1b5c91
 	github.com/vartanbeno/go-reddit/v2 v2.0.1
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d

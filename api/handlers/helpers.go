@@ -101,31 +101,31 @@ func (h *Handlers) GetFromReddit(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
 	}
 
-	index := 0
+	// index := 0
 
-	input := data.Post{
-		ID:                   posts[index].ID,
-		Name:                 posts[index].FullID,
-		CreatedUTC:           posts[index].Created.Time,
-		Permalink:            posts[index].Permalink,
-		Title:                posts[index].Title,
-		Category:             "top",
-		Selftext:             posts[index].Body,
-		Score:                posts[index].Score,
-		UpvoteRatio:          float64(posts[index].UpvoteRatio),
-		NumComments:          posts[index].NumberOfComments,
-		Subreddit:            posts[index].SubredditName,
-		SubredditID:          posts[index].SubredditID,
-		SubredditSubscribers: posts[index].SubredditSubscribers,
-		Author:               posts[index].Author,
-		AuthorFullname:       posts[index].AuthorID,
-	}
+	// input := data.Post{
+	// 	ID:                   posts[index].ID,
+	// 	Name:                 posts[index].FullID,
+	// 	CreatedUTC:           posts[index].Created.Time,
+	// 	Permalink:            posts[index].Permalink,
+	// 	Title:                posts[index].Title,
+	// 	Category:             "top",
+	// 	Selftext:             posts[index].Body,
+	// 	Score:                posts[index].Score,
+	// 	UpvoteRatio:          float64(posts[index].UpvoteRatio),
+	// 	NumComments:          posts[index].NumberOfComments,
+	// 	Subreddit:            posts[index].SubredditName,
+	// 	SubredditID:          posts[index].SubredditID,
+	// 	SubredditSubscribers: posts[index].SubredditSubscribers,
+	// 	Author:               posts[index].Author,
+	// 	AuthorFullname:       posts[index].AuthorID,
+	// }
 
-	err = h.Data.Posts.InsertOnePost(input)
-	if err != nil {
-		log.Error("Error inserting post into db", err)
-		return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
-	}
+	// err = h.Data.Posts.InsertOnePost(input)
+	// if err != nil {
+	// 	log.Error("Error inserting post into db", err)
+	// 	return c.JSON(http.StatusInternalServerError, Cake{"error": err.Error()})
+	// }
 
 	return c.JSON(200, posts[0])
 }

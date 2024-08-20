@@ -44,13 +44,13 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 
 	token, err := utils.OauthConfig.Exchange(c.Request().Context(), code)
 	if err != nil {
-		h.Utils.BadRequest(c, fmt.Errorf("Failed to exchange token: %s", err))
+		h.Utils.BadRequest(c, fmt.Errorf("failed to exchange token: %s", err))
 		return err
 	}
 
 	userdata, err := h.GetAuthUserDataFromReddit(c, token, utils.RedditUserAgentWeb)
 	if err != nil {
-		h.Utils.BadRequest(c, fmt.Errorf("Failed to get user: %s", err))
+		h.Utils.BadRequest(c, fmt.Errorf("failed to get user: %s", err))
 		return err
 	}
 

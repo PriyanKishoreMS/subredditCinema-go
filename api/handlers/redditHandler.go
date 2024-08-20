@@ -208,6 +208,29 @@ func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, Cake{"users": topUsers})
 }
 
+func (h *Handlers) UpdatePostsFromRedditHandler(c echo.Context) error {
+	topPosts, err := GetDailyTopPosts(h)
+	if err != nil {
+		h.Utils.InternalServerError(c, fmt.Errorf("error getting top posts %v", err))
+		return err
+	}
+
+	controversialPosts, err := GetDailyControversialPosts(h)
+	if err != nil {
+		h.Utils.InternalServerError(c, fmt.Errorf("error getting controversial posts %v", err))
+		return err
+	}
+
+	allPosts := append(topPosts, controversialPosts...)
+
+	if err = h.Data.Posts.InsertDailyPosts(allPosts); err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Cake{"message": "Posts updated successfully"})
+}
+
 func (h *Handlers) UpdatePostsFromReddit() error {
 	topPosts, err := GetDailyTopPosts(h)
 	if err != nil {

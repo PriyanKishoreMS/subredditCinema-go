@@ -3,7 +3,6 @@ package api
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"github.com/pascaldekloe/jwt"
 	"github.com/priyankishorems/bollytics-go/api/handlers"
 	"github.com/priyankishorems/bollytics-go/utils"
+	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 )
 
@@ -90,18 +90,20 @@ func OptionalAuthenticate(h handlers.Handlers) echo.MiddlewareFunc {
 			claims, err := jwt.HMACCheck([]byte(token), []byte(h.Config.JWT.Secret))
 			if err != nil {
 				h.Utils.UserUnAuthorizedResponse(c, err)
-				return ErrUserUnauthorized
+				fmt.Println("Error in hmac check")
+				return err
 			}
 
 			if !claims.Valid(time.Now()) {
 				h.Utils.CustomErrorResponse(c, utils.Cake{"token expired": "Send refresh token"}, http.StatusUnauthorized, ErrUserUnauthorized)
+				fmt.Println("Error in time check")
 				return ErrUserUnauthorized
 			}
 
 			if claims.Issuer != h.Config.JWT.Issuer {
 				err := fmt.Errorf("invalid issuer")
 				h.Utils.UserUnAuthorizedResponse(c, err)
-				return ErrUserUnauthorized
+				return err
 			}
 
 			reddit_uid := claims.Subject
@@ -146,11 +148,7 @@ func IPRateLimit(h *handlers.Handlers) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 
 			if h.Config.RateLimiter.Enabled {
-				ip, _, err := net.SplitHostPort(c.Request().RemoteAddr)
-				if err != nil {
-					h.Utils.InternalServerError(c, err)
-					return err
-				}
+				ip := realip.FromRequest(c.Request())
 
 				mu.Lock()
 

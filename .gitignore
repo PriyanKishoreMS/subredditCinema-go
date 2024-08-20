@@ -7,3 +7,6 @@ graw.ini
 /public
 /vendor
 */py-venv
+/bin
+/remote
+Makefile

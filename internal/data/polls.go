@@ -35,7 +35,6 @@ type PollDataResponse struct {
 	Options     json.RawMessage `json:"options"`
 	StartTime   time.Time       `json:"start_time"`
 	EndTime     time.Time       `json:"end_time"`
-	IsActive    bool            `json:"is_active"`
 	UserName    string          `json:"user_name"`
 	UserAvatar  string          `json:"user_avatar"`
 	TotalVotes  int             `json:"total_votes"`
@@ -93,7 +92,7 @@ func (p PollsModel) GetAllPolls(sub string, filters Filters) ([]PollDataResponse
 	totalRecords := 0
 	for rows.Next() {
 		var poll PollDataResponse
-		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
+		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
 		if err != nil {
 			return nil, Metadata{}, err
 		}
@@ -121,7 +120,7 @@ func (p PollsModel) GetAllPollsSigned(redditUID, sub string, filters Filters) ([
 	totalRecords := 0
 	for rows.Next() {
 		var poll PollDataResponse
-		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount, &poll.UserVote)
+		err := rows.Scan(&totalRecords, &poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount, &poll.UserVote)
 		if err != nil {
 			return nil, Metadata{}, err
 		}
@@ -140,7 +139,7 @@ func (p PollsModel) GetPollByID(pollID int) (*PollDataResponse, error) {
 	query := GetPollByIDQuery
 
 	var poll PollDataResponse
-	err := p.DB.QueryRow(ctx, query, pollID).Scan(&poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.IsActive, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
+	err := p.DB.QueryRow(ctx, query, pollID).Scan(&poll.ID, &poll.RedditUID, &poll.Subreddit, &poll.Title, &poll.Description, &poll.Options, &poll.StartTime, &poll.EndTime, &poll.UserName, &poll.UserAvatar, &poll.TotalVotes, &poll.VoteCount)
 	if err != nil {
 		return nil, err
 	}
