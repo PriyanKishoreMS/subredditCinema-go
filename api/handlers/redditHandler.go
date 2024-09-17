@@ -143,7 +143,7 @@ func (h *Handlers) GetTopPostsHandler(c echo.Context) error {
 
 	responseLength := len(topPosts)
 	if responseLength < 1 {
-		return c.JSON(http.StatusNotFound, Cake{"message": "No posts found"})
+		return c.JSON(http.StatusOK, Cake{"posts": []data.TopPosts{}})
 	}
 
 	return c.JSON(http.StatusOK, Cake{"posts": topPosts})
@@ -202,7 +202,7 @@ func (h *Handlers) GetTopUsersHandler(c echo.Context) error {
 
 	responseLength := len(topUsers)
 	if responseLength < 1 {
-		return c.JSON(http.StatusNotFound, Cake{"message": "No posts found"})
+		return c.JSON(http.StatusOK, Cake{"message": "No users found"})
 	}
 
 	return c.JSON(http.StatusOK, Cake{"users": topUsers})

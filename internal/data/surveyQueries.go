@@ -170,4 +170,6 @@ const (
 	ORDER BY 
     	sq.id;
 	`
+
+	CheckIfSurveyExpiredQuery = `select exists (select 1 from surveys where id = $1 and end_time > now())`
 )

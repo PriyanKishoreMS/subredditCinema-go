@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	pg "github.com/jackc/pgx/v5"
 	pgx "github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -135,6 +136,9 @@ func (p PostModel) GetTopPosts(sub string, category string, interval int) ([]Top
 
 	rows, err := p.DB.Query(ctx, query, sub, interval)
 	if err != nil {
+		if err == pg.ErrNoRows {
+			return []TopPosts{}, nil
+		}
 		return nil, fmt.Errorf("error in getting top posts; %v", err)
 	}
 	defer rows.Close()

@@ -337,3 +337,19 @@ func (s SurveysModel) DeleteSurveyByCreator(surveyID int, redditUID string) erro
 
 	return nil
 }
+
+func (s SurveysModel) CheckSurveyExpiry(surveyID int) (bool, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	var isExpired bool
+
+	query := CheckIfPollExpiredQuery
+
+	err := s.DB.QueryRow(ctx, query, surveyID).Scan(&isExpired)
+	if err != nil {
+		return false, err
+	}
+
+	return isExpired, nil
+}

@@ -119,4 +119,6 @@ const (
 	DeletePollByCreatorQuery = `
 	delete from polls where id = $1 and reddit_uid = $2
 	`
+
+	CheckIfPollExpiredQuery = `select exists (select 1 from polls where id = $1 and end_time < now())`
 )

@@ -176,3 +176,19 @@ func (p PollsModel) DeletePollByCreator(pollID int, redditUID string) error {
 
 	return nil
 }
+
+func (p PollsModel) CheckPollExpiry(pollID int) (bool, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := CheckIfPollExpiredQuery
+
+	var expired bool
+
+	err := p.DB.QueryRow(ctx, query, pollID).Scan(&expired)
+	if err != nil {
+		return false, err
+	}
+
+	return expired, nil
+}

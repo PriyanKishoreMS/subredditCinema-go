@@ -142,6 +142,17 @@ func (h *Handlers) CreatePollVoteHandler(c echo.Context) error {
 		return err
 	}
 
+	pollExpired, err := h.Data.Polls.CheckPollExpiry(pollID)
+	if err != nil {
+		h.Utils.InternalServerError(c, fmt.Errorf("error in checking poll expiry; %v", err))
+		return err
+	}
+
+	if pollExpired {
+		h.Utils.CustomErrorResponse(c, utils.Cake{"message": "poll expired"}, http.StatusAlreadyReported, nil)
+		return err
+	}
+
 	rows, err := h.Data.Polls.CreatePollVote(pollID, reddit_uid, int(optionID))
 	if err != nil {
 		h.Utils.InternalServerError(c, fmt.Errorf("error in inserting poll vote; %v", err))

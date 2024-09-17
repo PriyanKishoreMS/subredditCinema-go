@@ -48,6 +48,17 @@ func (h *Handlers) CreateSurveyResponsesHandler(c echo.Context) error {
 
 	answers := new([]data.Answers)
 
+	surveyActive, err := h.Data.Surveys.CheckSurveyExpiry(surveyID)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	if !surveyActive {
+		h.Utils.BadRequest(c, fmt.Errorf("survey has expired"))
+		return err
+	}
+
 	if err := h.Utils.ReadJSON(c, &answers); err != nil {
 		h.Utils.BadRequest(c, err)
 		return err

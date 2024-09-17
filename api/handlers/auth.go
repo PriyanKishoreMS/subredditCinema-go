@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -78,26 +79,20 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 		return err
 	}
 
-	html := `
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<title>Reddit Auth</title>
-		</head>
-		<body>
-			<script>
-				window.opener.postMessage({
-				type: 'AUTH_SUCCESS',
-				tokens: ` + string(tokensJSON) + `
-				}, 'http://localhost:5173');
-				window.close();
-			</script>
-		</body>
-		</html>
-	`
+	fmt.Println("tokensJSON here", string(tokensJSON))
 
-	c.Response().Header().Set("Content-Type", "text/html")
-	return c.String(http.StatusOK, html)
+	c.SetCookie(&http.Cookie{
+		Name:   "tokens",
+		Value:  url.QueryEscape(string(tokensJSON)),
+		Path:   "/",
+		MaxAge: 60 * 60,
+		Domain: ".priyankishore.dev",
+		// HttpOnly: true,
+		// Secure:   true,
+		// SameSite: http.SameSiteStrictMode,
+	})
+
+	return c.Redirect(http.StatusFound, "https://subredditcinema.priyankishore.dev/auth-callback")
 }
 
 func (h *Handlers) RefreshTokenHandler(c echo.Context) error {
