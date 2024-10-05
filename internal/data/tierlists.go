@@ -117,3 +117,17 @@ func (t TierlistsModel) GetTierListByID(tierlistID int) (*TierListData, error) {
 
 	return &tierList, nil
 }
+
+func (t TierlistsModel) DeleteTierlistByCreator(tierlistID int, reddit_uid string) error {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	query := `DELETE FROM tierlists WHERE id = $1 AND reddit_uid = $2`
+
+	_, err := t.DB.Exec(ctx, query, tierlistID, reddit_uid)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

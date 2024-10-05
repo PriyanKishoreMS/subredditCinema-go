@@ -70,3 +70,21 @@ func (h *Handlers) GetTierListByIDHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, tierList)
 }
+
+func (h *Handlers) DeleteTierListByCreatorHandler(c echo.Context) error {
+	reddit_uid := c.Get("reddit_uid").(string)
+
+	tierlistID, err := h.Utils.ReadIntParam(c, "id")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return err
+	}
+
+	err = h.Data.Tierlists.DeleteTierlistByCreator(tierlistID, reddit_uid)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Cake{"message": "tier list deleted"})
+}

@@ -32,6 +32,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 		tierlist := api.Group("/tierlist")
 		{
 			tierlist.POST("/create", h.CreateTierListHandler, Authenticate(*h))
+			tierlist.DELETE("/delete/:id", h.DeleteTierListByCreatorHandler, Authenticate(*h))
 			tierlist.GET("/all/:sub", h.GetAllTierlistHandler)
 			tierlist.GET("/:id", h.GetTierListByIDHandler)
 		}

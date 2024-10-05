@@ -82,17 +82,17 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 	fmt.Println("tokensJSON here", string(tokensJSON))
 
 	c.SetCookie(&http.Cookie{
-		Name:   "tokens",
-		Value:  url.QueryEscape(string(tokensJSON)),
-		Path:   "/",
-		MaxAge: 60 * 60,
-		Domain: ".priyankishore.dev",
-		// HttpOnly: true,
-		// Secure:   true,
-		// SameSite: http.SameSiteStrictMode,
+		Name:     "tokens",
+		Value:    url.QueryEscape(string(tokensJSON)),
+		Path:     "/",
+		MaxAge:   60 * 60,
+		Domain:   ".priyankishore.dev",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
 	})
 
-	return c.Redirect(http.StatusFound, "https://subredditcinema.priyankishore.dev/auth-callback")
+	return c.Redirect(http.StatusFound, "https://subcinema.priyankishore.dev/auth-callback")
 }
 
 func (h *Handlers) RefreshTokenHandler(c echo.Context) error {
