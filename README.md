@@ -1,4 +1,5 @@
 # SubCinema 
+Analyze indian subreddits and users showing top users, posts, trends, frequency, and more. It also has other features like creating and sharing tierlists, polls and surveys.
 
 ![Subcinema Demo](https://subredditcinema-api.priyankishore.dev/public/SubCinema.gif)
 
