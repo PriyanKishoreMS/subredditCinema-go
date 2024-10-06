@@ -1,4 +1,4 @@
-           --==============--              PriyanKishoreMS ~ git version 2.43.0
+```           --==============--              PriyanKishoreMS ~ git version 2.43.0
   .-==-.===oooo=oooooo=ooooo===--===-      ------------------------------------
  .==  =o=oGGGGGGo=oo=oGGGGGGGG=o=  oo-     Project: subredditCinema-go
  -o= oo=G .=GGGGGo=o== .=GGGGG=ooo o=-     HEAD: a147ea9 (master, origin/master)
@@ -21,4 +21,4 @@
     .=oooooooooooooooooooooooooooo-     
       -=oooooooooooooooooooooooo=.      
      =oo====oooooooooooooooo==-oo=-     
-    .-==-    .--=======---     .==- 
+    .-==-    .--=======---     .==- ```
