@@ -87,7 +87,7 @@ func (h *Handlers) CallbackHandler(c echo.Context) error {
 		Path:     "/",
 		MaxAge:   60 * 60,
 		Domain:   ".priyankishore.dev",
-		HttpOnly: true,
+		HttpOnly: false,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})

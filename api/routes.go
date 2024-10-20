@@ -44,6 +44,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 			survey.GET("/:survey_id", h.GetSurveyByIDHandler, OptionalAuthenticate(*h))
 			survey.GET("", h.GetAllSurveysHandler)
 			survey.GET("/results/:survey_id", h.GetSurveyResultsHandler)
+			survey.GET("/results/question/:question_id", h.GetTextResponseForSurveyQuestionHandler)
 			survey.DELETE("/delete/:survey_id", h.DeleteSurveyByCreatorHandler, Authenticate(*h))
 		}
 

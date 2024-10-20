@@ -171,5 +171,17 @@ const (
     	sq.id;
 	`
 
+	GetTextResponsesToEachQuestionQuery = `
+	select COUNT(*) OVER () AS total,
+	sa.id, answer_text, created_at 
+	from survey_answers as sa 
+	join survey_responses as sr 
+	on sr.id = sa.response_id 
+	where sa.question_id=$1
+	order by created_at desc
+	limit $2
+	offset $3
+	`
+
 	CheckIfSurveyExpiredQuery = `select exists (select 1 from surveys where id = $1 and end_time > now())`
 )

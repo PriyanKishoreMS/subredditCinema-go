@@ -163,3 +163,33 @@ func (h *Handlers) DeleteSurveyByCreatorHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, Cake{"message": "survey deleted"})
 }
+
+func (h *Handlers) GetTextResponseForSurveyQuestionHandler(c echo.Context) error {
+	filters := data.Filters{}
+
+	questionID, err := h.Utils.ReadIntParam(c, "question_id")
+	if err != nil {
+		h.Utils.BadRequest(c, err)
+		return err
+	}
+
+	fmt.Println(questionID, "questionID")
+
+	qs := c.Request().URL.Query()
+	filters.Page = h.Utils.ReadIntQuery(qs, "page", 1)
+	filters.PageSize = h.Utils.ReadIntQuery(qs, "page_size", 30)
+
+	err = h.Validate.Struct(filters)
+	if err != nil {
+		h.Utils.ValidationError(c, err)
+		return err
+	}
+
+	responses, metadata, err := h.Data.Surveys.GetAllTextResponsesOfQuestion(questionID, filters)
+	if err != nil {
+		h.Utils.InternalServerError(c, err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Cake{"responses": responses, "metadata": metadata})
+}

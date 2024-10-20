@@ -353,3 +353,38 @@ func (s SurveysModel) CheckSurveyExpiry(surveyID int) (bool, error) {
 
 	return isExpired, nil
 }
+
+type TextResponse struct {
+	AnswerID   int       `json:"answer_id"`
+	AnswerText string    `json:"answer_text"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+func (s SurveysModel) GetAllTextResponsesOfQuestion(questionID int, filters Filters) ([]TextResponse, Metadata, error) {
+	ctx, cancel := Handlectx()
+	defer cancel()
+
+	var textResponses []TextResponse
+	totalRecords := 0
+
+	query := GetTextResponsesToEachQuestionQuery
+
+	rows, err := s.DB.Query(ctx, query, questionID, filters.limit(), filters.offset())
+	if err != nil {
+		return nil, Metadata{}, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		textResponse := new(TextResponse)
+		if err := rows.Scan(&totalRecords, &textResponse.AnswerID, &textResponse.AnswerText, &textResponse.CreatedAt); err != nil {
+			return nil, Metadata{}, err
+		}
+		textResponses = append(textResponses, *textResponse)
+	}
+
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return textResponses, metadata, nil
+}
