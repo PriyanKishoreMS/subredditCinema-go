@@ -304,13 +304,10 @@ func (h *Handlers) GetRedditUsersSnoovatar(c echo.Context, topUsers []data.TopUs
 
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return err
-		}
-
-		if err != nil {
 			h.Utils.InternalServerError(c, err)
 			return err
 		}
+
 		resp, err := httpClient.Do(req)
 		if err != nil {
 			return err

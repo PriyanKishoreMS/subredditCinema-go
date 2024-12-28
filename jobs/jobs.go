@@ -2,13 +2,16 @@ package jobs
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/api/handlers"
+	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
 func UpdateWordClouds(h handlers.Handlers, scheduler gocron.Scheduler, atTimes gocron.AtTimes) (gocron.Job, error) {
@@ -65,6 +68,31 @@ func UpdateRedditPostsJob(h handlers.Handlers, scheduler gocron.Scheduler, atTim
 		}
 
 		log.Info("updateRedditPostsJob completed")
+		return nil
+	}))
+
+	return job, err
+}
+
+func getPostData() string {
+	return ""
+}
+
+func MakeWeeklyPost(h handlers.Handlers, scheduler gocron.Scheduler, daysOfWeek gocron.Weekdays, atTimes gocron.AtTimes) (gocron.Job, error) {
+	job, err := scheduler.NewJob(gocron.WeeklyJob(1, daysOfWeek, atTimes), gocron.NewTask(func() error {
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		defer cancel()
+
+		_, _, err := h.PostReddit.Post.SubmitText(ctx, reddit.SubmitTextRequest{
+			Subreddit: "kollywood",
+			Title:     "Weekly Summary Thread",
+			Text:      getPostData(),
+		})
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}))
 

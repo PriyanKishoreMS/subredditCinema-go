@@ -122,10 +122,6 @@ func (h *Handlers) RefreshTokenHandler(c echo.Context) error {
 	}
 
 	id := claims.Subject
-	if err != nil {
-		h.Utils.InternalServerError(c, err)
-		return err
-	}
 
 	accessToken, err := data.GenerateAccessToken(id, []byte(h.Config.JWT.Secret), h.Config.JWT.Issuer)
 	if err != nil {

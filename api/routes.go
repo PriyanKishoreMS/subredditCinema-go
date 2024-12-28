@@ -25,6 +25,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 	e.GET("/callback", h.CallbackHandler)
 	e.GET("/refresh", h.RefreshTokenHandler, Authenticate(*h))
 	e.GET("/proxy/:url", h.ProxyHandler)
+	e.GET("/create", h.PostOnReddit)
 
 	api := e.Group("/api")
 	{
@@ -65,7 +66,7 @@ func SetupRoutes(h *handlers.Handlers) *echo.Echo {
 
 		reddit := api.Group("/reddit")
 		{
-			reddit.GET("/temp", h.GetFromReddit)
+			// reddit.GET("/temp", h.GetFromReddit)
 			reddit.GET("/:sub/trending", h.GetTrendingWordsHandlerWeb)
 			reddit.GET("/:sub/frequency", h.GetPostFrequencyHandler)
 			reddit.GET("/:sub/:category/users", h.GetTopUsersHandler)

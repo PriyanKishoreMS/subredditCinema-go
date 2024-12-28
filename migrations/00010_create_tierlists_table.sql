@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS tierlists (
     title VARCHAR(255) NOT NULL,
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     tiers JSONB NOT NULL,
-    UNIQUE (reddit_uid, title)
+    UNIQUE (reddit_uid, title, subreddit)
 );
 -- +goose StatementEnd
 

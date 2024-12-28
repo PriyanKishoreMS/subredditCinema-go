@@ -15,14 +15,15 @@ import (
 
 type Cake map[string]interface{}
 type Handlers struct {
-	Config    utils.Config
-	Validate  validator.Validate
-	Utils     utils.Utilities
-	Data      data.Models
-	Tmdb      *tmdb.Client
-	RedditBot graw.Bot
-	Reddit    *reddit.Client
-	Stopword  sw.StopwordsMapping
+	Config     utils.Config
+	Validate   validator.Validate
+	Utils      utils.Utilities
+	Data       data.Models
+	Tmdb       *tmdb.Client
+	RedditBot  graw.Bot
+	Reddit     *reddit.Client
+	PostReddit *reddit.Client
+	Stopword   sw.StopwordsMapping
 }
 
 func (h *Handlers) HomeFunc(c echo.Context) error {

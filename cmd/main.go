@@ -65,7 +65,19 @@ func main() {
 		Password: utils.RedditPassword,
 	}
 
+	postRedditCredentials := reddit.Credentials{
+		ID:       utils.RedditId,
+		Secret:   utils.RedditSecret,
+		Username: utils.RedditUsername,
+		Password: utils.RedditPassword,
+	}
+
 	redditClient, err := reddit.NewClient(redditCredentials)
+	if err != nil {
+		log.Fatalf("error in initializing go-reddit client; %v", err)
+	}
+
+	postRedditClient, err := reddit.NewClient(postRedditCredentials)
 	if err != nil {
 		log.Fatalf("error in initializing go-reddit client; %v", err)
 	}
@@ -78,14 +90,15 @@ func main() {
 	log.Info("Reddit client initialized")
 
 	h := &handlers.Handlers{
-		Config:   *cfg,
-		Validate: validate,
-		Utils:    utils.NewUtils(),
-		Data:     data.NewModel(dbPool),
-		Tmdb:     tmdbClient,
-		// RedditBot:      redditBot,
-		Reddit:   redditClient,
-		Stopword: stopword,
+		Config:     *cfg,
+		Validate:   validate,
+		Utils:      utils.NewUtils(),
+		Data:       data.NewModel(dbPool),
+		Tmdb:       tmdbClient,
+		Reddit:     redditClient,
+		PostReddit: postRedditClient,
+		Stopword:   stopword,
+		// RedditBot: redditBot,
 	}
 
 	e := api.SetupRoutes(h)

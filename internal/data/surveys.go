@@ -344,7 +344,7 @@ func (s SurveysModel) CheckSurveyExpiry(surveyID int) (bool, error) {
 
 	var isExpired bool
 
-	query := CheckIfPollExpiredQuery
+	query := CheckIfSurveyExpiredQuery
 
 	err := s.DB.QueryRow(ctx, query, surveyID).Scan(&isExpired)
 	if err != nil {

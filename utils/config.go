@@ -29,6 +29,11 @@ var (
 	RedditUserAgentWeb string = os.Getenv("REDDIT_USER_AGENT_WEB")
 	JWTSecret          string = os.Getenv("JWT_SECRET")
 	JWTIssuer          string = os.Getenv("JWT_ISSUER")
+
+	PostRedditId       string = os.Getenv("POST_REDDIT_API_ID")
+	PostRedditSecret   string = os.Getenv("POST_REDDIT_API_SECRET")
+	PostRedditUsername string = os.Getenv("POST_REDDIT_USERNAME")
+	PostRedditPassword string = os.Getenv("POST_REDDIT_PASSWORD")
 )
 
 var (

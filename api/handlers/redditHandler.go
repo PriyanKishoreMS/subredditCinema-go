@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/priyankishorems/bollytics-go/internal/data"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -372,4 +374,31 @@ func getControversialFromReddit(Reddit *reddit.Client, limit int, interval strin
 		}
 	}
 	return allPosts, nil
+}
+
+func GetPostData() string {
+	return `This is a weekly summary thread test.
+	Here is the weekly word cloud for Kollywood discussions:
+	![Kollywood Word Cloud](https://subredditcinema-api.priyankishore.dev/public/wordcloud/kollywood_wordcloud.png)
+	Feel free to discuss and share your thoughts below!`
+}
+
+func (h *Handlers) PostOnReddit(c echo.Context) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	_, _, err := h.PostReddit.Post.SubmitLink(ctx, reddit.SubmitLinkRequest{
+		Subreddit: "kollywood",
+		Title:     "Weekly Summary Thread",
+		FlairID:   "012bba94-f2a6-11ee-9594-2a875b602fcc",
+		FlairText: "Appreciation",
+		URL:       "https://subredditcinema-api.priyankishore.dev/public/wordcloud/kollywood_wordcloud.png",
+	})
+	if err != nil {
+		log.Error("Error posting on reddit: ", err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Cake{"message": "Post created successfully"})
+
 }

@@ -159,7 +159,7 @@ func (h *Handlers) CreatePollVoteHandler(c echo.Context) error {
 		return err
 	}
 
-	if rows == 0 && err == nil {
+	if rows == 0 {
 		TLerror := fmt.Errorf("update time limit Exceeded")
 		h.Utils.CustomErrorResponse(c, utils.Cake{"message": "you've exceeded time limit to make change"}, http.StatusAlreadyReported, TLerror)
 		return TLerror
